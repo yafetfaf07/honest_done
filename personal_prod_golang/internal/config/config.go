@@ -6,7 +6,6 @@ import (
 
 	"github.com/joho/godotenv"
 )
-// Configs for Postgres and redis database
 type Config struct {
 	DatabaseURL string
 	RedisAddr string
