@@ -1,28 +1,34 @@
 package database
 
 import (
-	"context"
 	"fmt"
+	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
+// GORM database connect
+func Connect(databaseUrl string) (*gorm.DB, error) {
 
-func Connect(databaseUrl string) (*pgxpool.Pool, error) {
-	ctx := context.Background()
-	config, err := pgxpool.ParseConfig(databaseUrl)
+	gormConnection, err := gorm.Open(postgres.Open(databaseUrl), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("database connection failed: %w", err)
 	}
-	pool, err := pgxpool.NewWithConfig(ctx, config)
+	sqlDb, err := gormConnection.DB()
+
 	if err != nil {
-		return nil, fmt.Errorf("database connection failed: %w", err)
+		return nil, fmt.Errorf("Failed to get underlying sql.DB: %w", err)
 
 	}
-	err = pool.Ping(ctx)
-	if err != nil {
-		fmt.Printf("Unable to ping to database %v", err)
-		pool.Close()
-		return nil, err
+	if err := sqlDb.Ping(); err != nil {
+		return nil, fmt.Errorf("unable to ping database: %w", err)
 	}
-	return pool, nil
+	sqlDb.SetMaxIdleConns(10)
+	sqlDb.SetMaxOpenConns(100)
+	sqlDb.SetConnMaxLifetime(time.Hour)
+	
+	return gormConnection, nil
 }
