@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+
+	"github.com/yafetfaf07/personal_prod.git/internal/domain/entities"
 	dbmodels "github.com/yafetfaf07/personal_prod.git/internal/infrastructure/database/db_models"
 	"gorm.io/gorm"
 )
@@ -10,28 +12,33 @@ type UserRepository struct {
 	db *gorm.DB
 }
 
-// factory function 
-
-func NewUserRepo( db *gorm.DB) *UserRepository{
+func NewUserRepo(db *gorm.DB) *UserRepository {
 	return &UserRepository{
 		db: db,
 	}
 }
-// More better to return the database models
-func(u *UserRepository) RegisterUser(ctx context.Context, user *dbmodels.UserDB) (*dbmodels.UserDB,error){
-	user_db:=dbmodels.UserDB{
-		Name: user.Name,
-		Email: user.Email,
+
+
+func (u *UserRepository) Create(ctx context.Context, user *entities.User) (*entities.User, error) {
+	user_db := dbmodels.UserDB{
+		Name:     user.Name,
+		Email:    user.Email,
 		Password: user.Password,
-
-
 	}
-	err:=u.db.Create(&user_db).Error
-
-	if err!=nil {
-		return nil,err
+	
+	err := u.db.WithContext(ctx).Create(&user_db).Error
+	if err != nil {
+		return nil, err
 	}
-	return &user_db,nil
+	
+	user_entity := &entities.User{
+		// Note: Ensure `user_db.ID.UUID.String()` correctly resolves to a string 
+		// based on the specific UUID library you are using.
+		ID:       user_db.ID.UUID.String(), 
+		Name:     user_db.Name,
+		Email:    user_db.Email,
+		Password: user_db.Password,
+	}
 
-
+	return user_entity, nil
 }

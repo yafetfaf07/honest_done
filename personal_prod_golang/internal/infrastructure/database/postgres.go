@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	dbmodels "github.com/yafetfaf07/personal_prod.git/internal/infrastructure/database/db_models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
+
 // GORM database connect
 func Connect(databaseUrl string) (*gorm.DB, error) {
 
@@ -26,9 +28,12 @@ func Connect(databaseUrl string) (*gorm.DB, error) {
 	if err := sqlDb.Ping(); err != nil {
 		return nil, fmt.Errorf("unable to ping database: %w", err)
 	}
+	gormConnection.AutoMigrate(&dbmodels.UserDB{})
+
 	sqlDb.SetMaxIdleConns(10)
 	sqlDb.SetMaxOpenConns(100)
 	sqlDb.SetConnMaxLifetime(time.Hour)
 	
 	return gormConnection, nil
 }
+

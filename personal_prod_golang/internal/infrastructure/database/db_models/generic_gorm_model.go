@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type gormModel struct {
+type GormModel struct {
 	ID uuid.UUID `gorm:"primaryKey"`
 
 	CreatedAt time.Time
@@ -16,4 +16,3 @@ type gormModel struct {
 
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
-

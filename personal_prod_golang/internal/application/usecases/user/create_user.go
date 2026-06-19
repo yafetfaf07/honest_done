@@ -8,17 +8,17 @@ import (
 	"github.com/yafetfaf07/personal_prod.git/internal/domain/interfaces"
 )
 
-type userservice struct {
+type UserService struct {
 	userRepo interfaces.UserRepo
 }
 
-func NewUserService(repo interfaces.UserRepo) userservice {
-	return userservice{
+func NewUserService(repo interfaces.UserRepo) *UserService {
+	return &UserService{
 		userRepo: repo,
 	}
 }
 
-func (u *userservice) Register(ctx context.Context, dto *dtos.CreateUser) (*dtos.CreateAndLoginResponse, error) {
+func (u *UserService) Register(ctx context.Context, dto *dtos.CreateUser) (*dtos.CreateAndLoginResponse, error) {
 	// Map the DTO to their respective entities
 
 	userEntity := &entities.User{
