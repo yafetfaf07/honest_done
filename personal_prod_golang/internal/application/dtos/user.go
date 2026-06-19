@@ -1,6 +1,5 @@
 package dtos
 
-import "context"
 
 // user create dto
 type CreateUser struct{
@@ -19,6 +18,3 @@ type LoginUser struct {
 	Password string `json:"password" binding:"required"`
 }
 
-type UserUseCase interface {
-Register(ctx context.Context, createUser CreateUser)(*CreateAndLoginResponse, error)
-}

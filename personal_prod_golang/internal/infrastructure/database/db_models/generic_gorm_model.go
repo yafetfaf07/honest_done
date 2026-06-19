@@ -1,12 +1,14 @@
 package dbmodels
+
 import (
 	"time"
 
+	uuid "github.com/jackc/pgx/pgtype/ext/gofrs-uuid"
 	"gorm.io/gorm"
 )
 
-type GormModel struct {
-	ID uint `gorm:"primaryKey"`
+type gormModel struct {
+	ID uuid.UUID `gorm:"primaryKey"`
 
 	CreatedAt time.Time
 
@@ -14,3 +16,4 @@ type GormModel struct {
 
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
+
