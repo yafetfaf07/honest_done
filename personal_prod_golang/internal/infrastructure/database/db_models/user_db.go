@@ -6,3 +6,8 @@ type UserDB struct {
 	Password string
 	GormModel
 }
+
+
+func(UserDB) TableName() string{
+	return "users"
+}

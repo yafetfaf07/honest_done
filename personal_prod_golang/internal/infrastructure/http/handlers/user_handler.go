@@ -36,6 +36,7 @@ return func(c *gin.Context) {
 	res,err:=u.userService.Register(ctx,&request)
 	if err!=nil {
 		c.JSON(http.StatusInternalServerError,gin.H{"error":err})
+		return
 	}
 	c.JSON(http.StatusCreated,res)
 
