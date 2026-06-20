@@ -9,6 +9,7 @@ import (
 	"github.com/yafetfaf07/personal_prod.git/internal/infrastructure/database"
 	"github.com/yafetfaf07/personal_prod.git/internal/infrastructure/http/handlers"
 	"github.com/yafetfaf07/personal_prod.git/internal/infrastructure/repository"
+	"github.com/yafetfaf07/personal_prod.git/internal/infrastructure/security"
 )
 func init() {
 	
@@ -29,12 +30,12 @@ func main() {
 	// 	fmt.Errorf("An error occured during connection to redis", err)
 
 	// }
-
+	hashService:=security.NewBcrypt()
 	// Repo passed DB as DI
 	userRepo := repository.NewUserRepo(db)
 
 	// Use case passed repo as DI
-	userUsecase := usecases.NewUserService(userRepo)
+	userUsecase := usecases.NewUserService(userRepo,hashService)
 	userHandler := handlers.NewUserHandler(userUsecase)
 	var router *gin.Engine = gin.Default()
 

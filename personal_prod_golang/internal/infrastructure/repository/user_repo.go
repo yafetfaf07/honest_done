@@ -41,4 +41,4 @@ func (u *UserRepository) Create(ctx context.Context, user *entities.User) (*enti
 	}
 
 	return user_entity, nil
-}
+} 

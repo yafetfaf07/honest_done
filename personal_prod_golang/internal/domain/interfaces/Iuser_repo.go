@@ -6,6 +6,6 @@ import (
 	"github.com/yafetfaf07/personal_prod.git/internal/domain/entities"
 )
 
-type UserRepo interface {
+type IUserRepo interface {
 	Create(ctx context.Context, user *entities.User) (*entities.User, error)
 }
