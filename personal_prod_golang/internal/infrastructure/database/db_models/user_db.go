@@ -1,9 +1,10 @@
 package dbmodels
 
 type UserDB struct {
-	Name     string
+	Name     string `gorm:"not null"`
 	Email    string `gorm:"index"`
-	Password string
+	Password string `gorm:"not null"`
+	Tasks []TodoTaskDB `gorm:"foreignKey:UserId"`
 	GormModel
 }
 

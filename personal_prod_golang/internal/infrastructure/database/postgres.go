@@ -29,12 +29,17 @@ func Connect(databaseUrl string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("unable to ping database: %w", err)
 	}
 	gormConnection.AutoMigrate(&dbmodels.UserDB{})
-	gormConnection.AutoMigrate(&dbmodels.TodoTask{})
+	gormConnection.AutoMigrate(&dbmodels.TodoTaskDB{})
+	// gormConnection.Migrator().AlterColumn(&dbmodels.TodoTaskDB{}, "Title")
+	// gormConnection.Migrator().AlterColumn(&dbmodels.TodoTaskDB{}, "ScheduleTime")
+	gormConnection.Migrator().AlterColumn(&dbmodels.UserDB{}, "Password")
+	gormConnection.Migrator().AlterColumn(&dbmodels.UserDB{}, "Name")
+
+	gormConnection.Migrator().AlterColumn(&dbmodels.TodoTaskDB{}, "Status")
 
 	sqlDb.SetMaxIdleConns(10)
 	sqlDb.SetMaxOpenConns(100)
 	sqlDb.SetConnMaxLifetime(time.Hour)
-	
+
 	return gormConnection, nil
 }
-
