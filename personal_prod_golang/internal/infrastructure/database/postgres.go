@@ -32,10 +32,10 @@ func Connect(databaseUrl string) (*gorm.DB, error) {
 	gormConnection.AutoMigrate(&dbmodels.TodoTaskDB{})
 	// gormConnection.Migrator().AlterColumn(&dbmodels.TodoTaskDB{}, "Title")
 	// gormConnection.Migrator().AlterColumn(&dbmodels.TodoTaskDB{}, "ScheduleTime")
-	gormConnection.Migrator().AlterColumn(&dbmodels.UserDB{}, "Password")
-	gormConnection.Migrator().AlterColumn(&dbmodels.UserDB{}, "Name")
+	// gormConnection.Migrator().AlterColumn(&dbmodels.UserDB{}, "Password")
+	// gormConnection.Migrator().AlterColumn(&dbmodels.UserDB{}, "Name")
 
-	gormConnection.Migrator().AlterColumn(&dbmodels.TodoTaskDB{}, "Status")
+	// gormConnection.Migrator().AlterColumn(&dbmodels.TodoTaskDB{}, "Status")
 
 	sqlDb.SetMaxIdleConns(10)
 	sqlDb.SetMaxOpenConns(100)
