@@ -1,10 +1,12 @@
 package entities
 
+import "time"
+
 type Task struct {
 	ID string
 	Title string
-	ScheduleTime string
-	CompletedTime string
+	ScheduleTime time.Time
+	CompletedTime time.Time
 	Status string
 	UserId string
 }

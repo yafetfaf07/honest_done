@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/yafetfaf07/personal_prod.git/internal/application/dtos"
@@ -12,14 +13,15 @@ import (
 type TaskService struct {
 	taskRep interfaces.ITaskRepo
 }
-
+var(ErrScheduleTimeConflict = errors.New("schedule time conflict")
+)
 func NewTaskService(repo interfaces.ITaskRepo) *TaskService {
 	return &TaskService{
 		taskRep: repo,
 	}
 }
 
-func (t *TaskService) CreateTask(ctx context.Context, dto *dtos.CreateTask, userId string) (*dtos.GetTasks, error) {
+func (t *TaskService) CreateTask(ctx context.Context, dto *dtos.CreateTask, userId string) (dtos.GetTasks, error) {
 
 	if userId=="" {
 		log.Fatalf("User Id shouldn't be null")
@@ -28,12 +30,22 @@ func (t *TaskService) CreateTask(ctx context.Context, dto *dtos.CreateTask, user
 	
 	taskEntity := &entities.Task{
 		Title:         dto.Title,
-		ScheduleTime:  dto.ScheduleTime.Format(""),
-		CompletedTime: dto.CompleteTime.Format(""),
+		ScheduleTime:  dto.ScheduleTime,
+		CompletedTime: dto.CompleteTime,
 		UserId:        userId,
 	}
-	t.taskRep.CreateTask(ctx,taskEntity)
+	task, err := t.taskRep.CreateTask(ctx, taskEntity)
+	if err != nil {
+		if errors.Is(err, ErrScheduleTimeConflict) {
+			return dtos.GetTasks{}, ErrScheduleTimeConflict
+		}
+		return dtos.GetTasks{}, err
+	}
 
-
-	return nil, nil
+	return dtos.GetTasks{
+		Id: task.ID,
+		Title: task.Title,
+		ScheduleTime: task.ScheduleTime,
+		CompleteTime: task.CompletedTime,
+	}, nil
 }

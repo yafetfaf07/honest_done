@@ -30,7 +30,7 @@ func Connect(databaseUrl string) (*gorm.DB, error) {
 	}
 	gormConnection.AutoMigrate(&dbmodels.UserDB{})
 	gormConnection.AutoMigrate(&dbmodels.TodoTaskDB{})
-	// gormConnection.Migrator().AlterColumn(&dbmodels.TodoTaskDB{}, "Title")
+	gormConnection.Migrator().AlterColumn(&dbmodels.TodoTaskDB{}, "ScheduleTime")
 	// gormConnection.Migrator().AlterColumn(&dbmodels.TodoTaskDB{}, "ScheduleTime")
 	// gormConnection.Migrator().AlterColumn(&dbmodels.UserDB{}, "Password")
 	// gormConnection.Migrator().AlterColumn(&dbmodels.UserDB{}, "Name")

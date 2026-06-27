@@ -8,8 +8,8 @@ import (
 
 type TodoTaskDB struct {
 	Title     string `gorm:"not null"`
-	ScheduleTime time.Time `gorm:"not null"`
-	CompletedTime *time.Time
+	ScheduleTime time.Time `gorm:"not null; uniqueIndex"`
+	CompletedTime time.Time
 	UserId   uuid.UUID `gorm:"not null"`
 	Status string `gorm:"not null;default:'pending'"`
 	User    UserDB `gorm:"foreignKey:UserId"`

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -38,6 +39,10 @@ func( t *TaskHandler) AddTask() gin.HandlerFunc {
 	res,err:=t.taskService.CreateTask(ctx,&request, id)
 
 	if err!=nil {
+		if errors.Is(err, usecase.ErrScheduleTimeConflict) {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"Unknown error happened": err.Error()})
 		return
 	}
