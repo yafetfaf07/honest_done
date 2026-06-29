@@ -13,7 +13,8 @@ func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHa
 	}
 	taskApi:=r.Group("/api/v1/task") 
 	{
-		taskApi.POST("/create/:id",taskHandler.AddTask())
+		taskApi.POST("/create/:id",taskHandler.AddTaskHandler())
+		taskApi.GET("/getTask/:id", taskHandler.GetTaskByUserIdHandler())
 	}
 
 

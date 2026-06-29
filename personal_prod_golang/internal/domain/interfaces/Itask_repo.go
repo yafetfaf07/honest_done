@@ -8,4 +8,5 @@ import (
 
 type ITaskRepo interface {
 	CreateTask(ctx context.Context, task *entities.Task) (*entities.Task,error)
+	GetTaskByUserId(ctx context.Context,userId string )(*[]entities.Task,error)
 }

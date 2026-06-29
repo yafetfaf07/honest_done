@@ -26,39 +26,38 @@ func NewTaskRepo(db *gorm.DB) *TaskRepository {
 	}
 }
 
-func (t *TaskRepository) FindTaskByScheduleTime(ctx context.Context, scheduleTime time.Time) ([]*entities.Task, error) {
-	var tasks []*entities.Task
-	endTime := scheduleTime.Add(15 * time.Minute)
+func (t *TaskRepository) FindTaskByScheduleTime(ctx context.Context, scheduleTime time.Time) bool {
 	var count int64
-	err := t.db.WithContext(ctx).Where("schedule_time BETWEEN ? AND ?", scheduleTime, endTime).Limit(1).Count(&count).Find(&tasks).Error
+	err := t.db.WithContext(ctx).Model(&dbmodels.TodoTaskDB{}).Where("schedule_time = ?", scheduleTime).Count(&count).Error
 	if err != nil {
-		return nil, err
+		return false
 	}
-	return tasks, nil
+	return count > 0
 }
 
 func (t *TaskRepository) CreateTask(ctx context.Context, task *entities.Task) (*entities.Task, error) {
 
-	tasks, err := t.FindTaskByScheduleTime(ctx, task.ScheduleTime)
-	if err != nil {
-		return nil, err
-	}
-	if len(tasks) > 0 {
+	tasks := t.FindTaskByScheduleTime(ctx, task.ScheduleTime)
+
+	if tasks {
 		return nil, usecase.ErrScheduleTimeConflict
 	}
-
+user_id,err:=uuid.Parse(task.UserId)
+if err!=nil {
+	return nil,err
+}
 	task_db := dbmodels.TodoTaskDB{
 		Title:         task.Title,
 		ScheduleTime:  task.ScheduleTime,
 		CompletedTime: task.CompletedTime,
-		UserId:        uuid.MustParse(task.UserId),
+		UserId:       user_id,
 		Status:        task.Status,
 	}
 	task_db.ID = uuid.New()
 	err = t.db.WithContext(ctx).Create(&task_db).Error
 
 	if err != nil {
-		
+
 		return nil, err
 	}
 	task_entity := &entities.Task{
@@ -71,4 +70,25 @@ func (t *TaskRepository) CreateTask(ctx context.Context, task *entities.Task) (*
 	}
 
 	return task_entity, nil
+}
+
+func (t *TaskRepository) GetTaskByUserId(ctx context.Context, userId string) (*[]entities.Task, error) {
+	var tasks []dbmodels.TodoTaskDB
+	 tasksEntity := make([]entities.Task, 0, len(tasks))
+	err := t.db.WithContext(ctx).Where("user_id = ?", userId).Find(&tasks).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for _, task := range tasks {
+		tasksEntity = append(tasksEntity, entities.Task{
+			ID:            task.ID.String(),
+			Title:         task.Title,
+			ScheduleTime:  task.ScheduleTime,
+			CompletedTime: task.CompletedTime,
+			Status:        task.Status,
+			UserId:        task.UserId.String(),
+		})
+	}
+	return &tasksEntity, nil
 }
