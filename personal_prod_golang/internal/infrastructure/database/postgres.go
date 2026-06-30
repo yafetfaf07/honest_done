@@ -29,8 +29,11 @@ func Connect(databaseUrl string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("unable to ping database: %w", err)
 	}
 	gormConnection.AutoMigrate(&dbmodels.UserDB{})
+	gormConnection.AutoMigrate(&dbmodels.GoalDB{})
 	gormConnection.AutoMigrate(&dbmodels.TodoTaskDB{})
-	gormConnection.Migrator().AlterColumn(&dbmodels.TodoTaskDB{}, "ScheduleTime")
+	gormConnection.AutoMigrate(&dbmodels.QuestionDB{})
+	gormConnection.AutoMigrate(&dbmodels.QuestionOptionDB{})
+	gormConnection.AutoMigrate(&dbmodels.SelectedQuestionOptionDB{})
 	// gormConnection.Migrator().AlterColumn(&dbmodels.TodoTaskDB{}, "ScheduleTime")
 	// gormConnection.Migrator().AlterColumn(&dbmodels.UserDB{}, "Password")
 	// gormConnection.Migrator().AlterColumn(&dbmodels.UserDB{}, "Name")

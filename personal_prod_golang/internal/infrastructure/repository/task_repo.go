@@ -12,21 +12,21 @@ import (
 	"gorm.io/gorm"
 )
 
-type TaskRepository struct {
+type taskRepository struct {
 	db *gorm.DB
 }
 
 const layout = time.RFC3339
 
-// factory function
+// factory pattern
 
-func NewTaskRepo(db *gorm.DB) *TaskRepository {
-	return &TaskRepository{
+func NewTaskRepo(db *gorm.DB) *taskRepository {
+	return &taskRepository{
 		db: db,
 	}
 }
 
-func (t *TaskRepository) FindTaskByScheduleTime(ctx context.Context, scheduleTime time.Time) bool {
+func (t *taskRepository) FindTaskByScheduleTime(ctx context.Context, scheduleTime time.Time) bool {
 	var count int64
 	err := t.db.WithContext(ctx).Model(&dbmodels.TodoTaskDB{}).Where("schedule_time = ?", scheduleTime).Count(&count).Error
 	if err != nil {
@@ -35,22 +35,22 @@ func (t *TaskRepository) FindTaskByScheduleTime(ctx context.Context, scheduleTim
 	return count > 0
 }
 
-func (t *TaskRepository) CreateTask(ctx context.Context, task *entities.Task) (*entities.Task, error) {
+func (t *taskRepository) CreateTask(ctx context.Context, task *entities.Task) (*entities.Task, error) {
 
 	tasks := t.FindTaskByScheduleTime(ctx, task.ScheduleTime)
 
 	if tasks {
 		return nil, usecase.ErrScheduleTimeConflict
 	}
-user_id,err:=uuid.Parse(task.UserId)
-if err!=nil {
-	return nil,err
-}
+	goal_id, err := uuid.Parse(task.GoalID)
+	if err != nil {
+		return nil, err
+	}
 	task_db := dbmodels.TodoTaskDB{
 		Title:         task.Title,
 		ScheduleTime:  task.ScheduleTime,
 		CompletedTime: task.CompletedTime,
-		UserId:       user_id,
+		GoalID:        goal_id,
 		Status:        task.Status,
 	}
 	task_db.ID = uuid.New()
@@ -66,15 +66,15 @@ if err!=nil {
 		ScheduleTime:  task_db.ScheduleTime,
 		CompletedTime: task_db.CompletedTime,
 		Status:        task_db.Status,
-		UserId:        task.UserId,
+		GoalID:        task.GoalID,
 	}
 
 	return task_entity, nil
 }
 
-func (t *TaskRepository) GetTaskByUserId(ctx context.Context, userId string) (*[]entities.Task, error) {
+func (t *taskRepository) GetTaskByUserId(ctx context.Context, userId string) (*[]entities.Task, error) {
 	var tasks []dbmodels.TodoTaskDB
-	 tasksEntity := make([]entities.Task, 0, len(tasks))
+	tasksEntity := make([]entities.Task, 0, len(tasks))
 	err := t.db.WithContext(ctx).Where("user_id = ?", userId).Find(&tasks).Error
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (t *TaskRepository) GetTaskByUserId(ctx context.Context, userId string) (*[
 			ScheduleTime:  task.ScheduleTime,
 			CompletedTime: task.CompletedTime,
 			Status:        task.Status,
-			UserId:        task.UserId.String(),
+			GoalID:        task.GoalID.String(),
 		})
 	}
 	return &tasksEntity, nil

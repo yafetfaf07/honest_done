@@ -4,7 +4,7 @@ type UserDB struct {
 	Name     string `gorm:"not null"`
 	Email    string `gorm:"index"`
 	Password string `gorm:"not null"`
-	Tasks []TodoTaskDB `gorm:"foreignKey:UserId"`
+	Goals []GoalDB `gorm:"foreignKey:UserId"`
 	GormModel
 }
 

@@ -13,9 +13,7 @@ import (
 	"github.com/yafetfaf07/personal_prod.git/internal/infrastructure/repository"
 	"github.com/yafetfaf07/personal_prod.git/internal/infrastructure/security"
 )
-func init() {
-	
-}
+
 func main() {
 	cfg,err:=config.Load()
 

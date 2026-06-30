@@ -8,5 +8,5 @@ type Task struct {
 	ScheduleTime time.Time
 	CompletedTime time.Time
 	Status string
-	UserId string
+	GoalID string
 }

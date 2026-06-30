@@ -21,9 +21,9 @@ func NewTaskService(repo interfaces.ITaskRepo) *TaskService {
 	}
 }
 
-func (t *TaskService) CreateTask(ctx context.Context, dto *dtos.CreateTask, userId string) (dtos.GetTasks, error) {
+func (t *TaskService) CreateTask(ctx context.Context, dto *dtos.CreateTask, goalId string) (dtos.GetTasks, error) {
 
-	if userId=="" {
+	if goalId=="" {
 		log.Fatalf("User Id shouldn't be null")
 		
 	}
@@ -32,7 +32,7 @@ func (t *TaskService) CreateTask(ctx context.Context, dto *dtos.CreateTask, user
 		Title:         dto.Title,
 		ScheduleTime:  dto.ScheduleTime,
 		CompletedTime: dto.CompleteTime,
-		UserId:        userId,
+		GoalID:        goalId,
 	}
 	task, err := t.taskRep.CreateTask(ctx, taskEntity)
 	if err != nil {

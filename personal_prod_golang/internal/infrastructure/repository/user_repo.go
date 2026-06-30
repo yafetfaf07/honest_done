@@ -8,18 +8,18 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserRepository struct {
+type userRepository struct {
 	db *gorm.DB
 }
 
-func NewUserRepo(db *gorm.DB) *UserRepository {
-	return &UserRepository{
+func NewUserRepo(db *gorm.DB) *userRepository {
+	return &userRepository{
 		db: db,
 	}
 }
 
 
-func (u *UserRepository) Create(ctx context.Context, user *entities.User) (*entities.User, error) {
+func (u *userRepository) Create(ctx context.Context, user *entities.User) (*entities.User, error) {
 	user_db := dbmodels.UserDB{
 		Name:     user.Name,
 		Email:    user.Email,
@@ -32,8 +32,6 @@ func (u *UserRepository) Create(ctx context.Context, user *entities.User) (*enti
 	}
 	
 	user_entity := &entities.User{
-		// Note: Ensure `user_db.ID.UUID.String()` correctly resolves to a string 
-		// based on the specific UUID library you are using.
 		ID:       user_db.ID.String(),
 		Name:     user_db.Name,
 		Email:    user_db.Email,

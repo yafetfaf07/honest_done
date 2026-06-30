@@ -10,9 +10,10 @@ type TodoTaskDB struct {
 	Title     string `gorm:"not null"`
 	ScheduleTime time.Time `gorm:"not null; uniqueIndex"`
 	CompletedTime time.Time
-	UserId   uuid.UUID `gorm:"not null"`
+	GoalID uuid.UUID `gorm:"not null;"`
+	Goal GoalDB `gorm:"foreignKey:GoalID"`
+	// UserId   uuid.UUID `gorm:"not null"`
 	Status string `gorm:"not null;default:'pending'"`
-	User    UserDB `gorm:"foreignKey:UserId"`
 	GormModel
 }
 
