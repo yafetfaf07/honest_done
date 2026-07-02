@@ -14,4 +14,3 @@ type GetTasks struct {
 	ScheduleTime time.Time `json:"schedule_time" binding:"required"`
 	CompleteTime time.Time `json:"complete_time"`
 }
-

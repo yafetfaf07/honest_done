@@ -12,6 +12,7 @@ import (
 type goalRepository struct {
 	db *gorm.DB
 }
+
 func NewGoalRepo(db *gorm.DB) *goalRepository {
 	return &goalRepository{db: db}
 }
@@ -27,7 +28,7 @@ func (g *goalRepository) Create(ctx context.Context, goal *entities.Goal) (*enti
 		UserID:      goal_id,
 		TargetDate:  goal.TargetDate,
 	}
-	goal_db.ID=uuid.New()
+	goal_db.ID = uuid.New()
 	if err := g.db.WithContext(ctx).Create(&goal_db).Error; err != nil {
 		return nil, err
 	}
@@ -40,4 +41,23 @@ func (g *goalRepository) Create(ctx context.Context, goal *entities.Goal) (*enti
 		Progress:    goal_db.Progress,
 	}, nil
 }
+func (t *taskRepository) GetGoalByUserId(ctx context.Context, userId string) (*[]entities.Goal, error) {
+	var goals []dbmodels.GoalDB
+	goalsEntity := make([]entities.Goal, 0, len(goals))
+	err := t.db.WithContext(ctx).Where("user_id = ?", userId).Find(&goals).Error
+	if err != nil {
+		return nil, err
+	}
 
+	for _, goal := range goals {
+		goalsEntity = append(goalsEntity, entities.Goal{
+			ID:          goal.ID.String(),
+			Name:        goal.Name,
+			Description: goal.Description,
+			TargetDate:  goal.TargetDate,
+			Streak:      goal.Streak,
+			Progress:    goal.Progress,
+		})
+	}
+	return &goalsEntity, nil
+}

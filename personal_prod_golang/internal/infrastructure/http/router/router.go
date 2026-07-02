@@ -5,7 +5,7 @@ import (
 	"github.com/yafetfaf07/personal_prod.git/internal/infrastructure/http/handlers"
 )
 
-func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHandler) *gin.Engine {
+func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHandler, goalHandler *handlers.GoalHandler) *gin.Engine {
 	r := gin.Default()
 	userApi := r.Group("/api/v1/user")
 	{
@@ -13,8 +13,13 @@ func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHa
 	}
 	taskApi:=r.Group("/api/v1/task") 
 	{
-		taskApi.POST("/create/:id",taskHandler.AddTaskHandler())
+		taskApi.POST("/create/:goal_id",taskHandler.AddTaskHandler())
 		taskApi.GET("/getTask/:id", taskHandler.GetTaskByUserIdHandler())
+	}
+	goalApi:=r.Group("/api/v1/goal",) 
+	{
+		goalApi.POST("/create/:id", goalHandler.AddGoalHandler())
+		// goalApi.GET("/getGoal/:id", goalHandler.GetGoalByUserIdHandler())
 	}
 
 

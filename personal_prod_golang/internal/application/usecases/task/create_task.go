@@ -1,4 +1,4 @@
-package usecase
+package usecases
 
 import (
 	"context"
@@ -21,7 +21,7 @@ func NewTaskService(repo interfaces.ITaskRepo) *TaskService {
 	}
 }
 
-func (t *TaskService) CreateTask(ctx context.Context, dto *dtos.CreateTask, goalId string) (dtos.GetTasks, error) {
+func (t *TaskService) CreateTask(ctx context.Context, dto *dtos.CreateTask, goalId string) (*dtos.GetTasks, error) {
 
 	if goalId=="" {
 		log.Fatalf("User Id shouldn't be null")
@@ -37,12 +37,12 @@ func (t *TaskService) CreateTask(ctx context.Context, dto *dtos.CreateTask, goal
 	task, err := t.taskRep.CreateTask(ctx, taskEntity)
 	if err != nil {
 		if errors.Is(err, ErrScheduleTimeConflict) {
-			return dtos.GetTasks{}, ErrScheduleTimeConflict
+			return nil, ErrScheduleTimeConflict
 		}
-		return dtos.GetTasks{}, err
+		return nil, err
 	}
 
-	return dtos.GetTasks{
+	return &dtos.GetTasks{
 		Id: task.ID,
 		Title: task.Title,
 		ScheduleTime: task.ScheduleTime,

@@ -30,8 +30,8 @@ func( t *TaskHandler) AddTaskHandler() gin.HandlerFunc {
 		ctx,cancel:=context.WithTimeout(c.Request.Context(),5*time.Second)
 		defer cancel()
 		var request dtos.CreateTask
-		id:=c.Param("id")
-		user_id,err:=uuid.Parse(id)
+		id:=c.Param("goal_id")
+		goal_id,err:=uuid.Parse(id)
 
 		if err!=nil {
 			c.JSON(http.StatusBadRequest,gin.H{"error":"the params should be type of uuid"})
@@ -42,7 +42,7 @@ func( t *TaskHandler) AddTaskHandler() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-	res,err:=t.taskService.CreateTask(ctx,&request,user_id.String())
+	res,err:=t.taskService.CreateTask(ctx,&request,goal_id.String())
 
 	if err!=nil {
 		if errors.Is(err, usecase.ErrScheduleTimeConflict) {
@@ -52,7 +52,7 @@ func( t *TaskHandler) AddTaskHandler() gin.HandlerFunc {
 		c.JSON(http.StatusInternalServerError, gin.H{"Unknown error happened": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, res)
+	c.JSON(http.StatusCreated, res)
 	}
 }
 
