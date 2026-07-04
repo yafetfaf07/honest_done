@@ -19,17 +19,17 @@ func main() {
 	cfg, err := config.Load()
 
 	if err != nil {
-		log.Fatalf("Unable to load config", err.Error())
+		log.Fatalf("Unable to load config %v", err)
 	}
 
 	db, err := database.Connect(cfg.DatabaseURL)
 	if err != nil {
-		log.Fatalf("An error occured during connection of database", err.Error())
+		log.Fatalf("An error occured during connection of database %v", err)
 
 	}
 	redisInit, err := database.InitRedis(os.Getenv("REDIS_ADDR"))
 	if err != nil {
-		log.Fatalf("An error occured during connection to redis", err.Error())
+		log.Fatalf("An error occured during connection to redis %v", err)
 
 	}
 	defer redisInit.Close()

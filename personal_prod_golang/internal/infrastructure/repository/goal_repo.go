@@ -13,7 +13,7 @@ type goalRepository struct {
 	db *gorm.DB
 }
 
-func NewGoalRepo(db *gorm.DB) *goalRepository {
+	func NewGoalRepo(db *gorm.DB) *goalRepository {
 	return &goalRepository{db: db}
 }
 
@@ -41,7 +41,7 @@ func (g *goalRepository) Create(ctx context.Context, goal *entities.Goal) (*enti
 		Progress:    goal_db.Progress,
 	}, nil
 }
-func (t *taskRepository) GetGoalByUserId(ctx context.Context, userId string) (*[]entities.Goal, error) {
+func (t *goalRepository) GetGoalByUserId(ctx context.Context, userId string) ([]entities.Goal, error) {
 	var goals []dbmodels.GoalDB
 	goalsEntity := make([]entities.Goal, 0, len(goals))
 	err := t.db.WithContext(ctx).Where("user_id = ?", userId).Find(&goals).Error
@@ -59,5 +59,5 @@ func (t *taskRepository) GetGoalByUserId(ctx context.Context, userId string) (*[
 			Progress:    goal.Progress,
 		})
 	}
-	return &goalsEntity, nil
+	return goalsEntity, nil
 }
