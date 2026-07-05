@@ -44,3 +44,22 @@ func (h *GoalHandler) AddGoalHandler() gin.HandlerFunc {
 		c.JSON(http.StatusCreated, res)
 	}
 }
+
+func (h *GoalHandler) GetGoalsByUserIdHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+		defer cancel()
+		id := c.Param("id")
+		user_id, err := uuid.Parse(id)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "the params should be type of uuid"})
+			return
+		}
+		res, err := h.goalService.GetGoalByUserId(ctx, user_id.String())
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, res)
+	}
+}

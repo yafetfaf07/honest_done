@@ -11,7 +11,7 @@ import (
 
 
 var(NoGoalsFoundError=errors.New("No Goals yet!"))
-var(UserIdInvalidError=errors.New("user id should be a valid UUID"))
+var(UserIdInvalidError=errors.New("User id should be a valid UUID"))
 
 
 func(g *GoalService) GetGoalByUserId(ctx context.Context, userId string)([]dtos.GetGoal,error) {
@@ -36,6 +36,7 @@ func(g *GoalService) GetGoalByUserId(ctx context.Context, userId string)([]dtos.
 	goalDto=make([]dtos.GetGoal,len(goals))
 	for i,goal:=range goals{
 		goalDto[i]=dtos.GetGoal{
+			Id: goal.ID,
 			Name:        goal.Name,
 			Description: goal.Description,
 			TargetDate:  goal.TargetDate,
