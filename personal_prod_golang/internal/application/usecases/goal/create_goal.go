@@ -2,8 +2,6 @@ package usecases
 
 import (
 	"context"
-	"errors"
-
 	"github.com/yafetfaf07/personal_prod.git/internal/application/dtos"
 	"github.com/yafetfaf07/personal_prod.git/internal/domain/entities"
 	"github.com/yafetfaf07/personal_prod.git/internal/domain/interfaces"
@@ -17,9 +15,7 @@ func NewGoalService(goalRep interfaces.IGoalRepo) *GoalService {
 }
 
 func(g *GoalService) CreateGoal(ctx context.Context, dto *dtos.CreateGoalRequest, userId string ) (*dtos.GetGoal,error) {
-	if userId=="" {
-		return nil,errors.New("user id can't be empty")
-	}
+
 	goalEntity:= &entities.Goal{
 		Name:        dto.Name,
 		Description: dto.Description,

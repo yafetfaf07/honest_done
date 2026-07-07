@@ -28,6 +28,10 @@ func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHa
 		goalApi.POST("/create/:id", goalHandler.AddGoalHandler())
 		goalApi.GET("/getGoal/:id", goalHandler.GetGoalsByUserIdHandler())
 	}
+	questionApi := r.Group("/api/v1/question")
+	{
+		questionApi.POST("/create/:id",)
+	}
 
 	return r
 }

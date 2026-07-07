@@ -50,6 +50,10 @@ func (h *GoalHandler) GetGoalsByUserIdHandler() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 		defer cancel()
 		id := c.Param("id")
+		if id=="" {
+			c.JSON(http.StatusBadRequest, gin.H{"error":"params can't be empty"})
+			return
+		}
 		user_id, err := uuid.Parse(id)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "the params should be type of uuid"})
@@ -57,7 +61,7 @@ func (h *GoalHandler) GetGoalsByUserIdHandler() gin.HandlerFunc {
 		}
 		res, err := h.goalService.GetGoalByUserId(ctx, user_id.String())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "unknown error occured"})
 			return
 		}
 		c.JSON(http.StatusOK, res)

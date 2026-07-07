@@ -32,7 +32,7 @@ func (g *goalRepository) Create(ctx context.Context, goal *entities.Goal) (*enti
 	if err := g.db.WithContext(ctx).Create(&goal_db).Error; err != nil {
 		return nil, err
 	}
-	return &entities.Goal{
+	return &entities.Goal{	
 		Name:        goal_db.Name,
 		Description: goal_db.Description,
 		UserId:      goal_db.UserID.String(),
