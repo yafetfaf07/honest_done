@@ -16,7 +16,7 @@ var(UserIdInvalidError=errors.New("User id should be a valid UUID"))
 
 func(g *GoalService) GetGoalByUserId(ctx context.Context, userId string)([]dtos.GetGoal,error) {
 	if userId=="" {
-		log.Fatalf("User Id shouldn't be null")
+		return nil, errors.New("User id shouldn't be empty")
 	}
 
 	uuidUserId, err := uuid.Parse(userId)

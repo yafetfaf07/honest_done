@@ -7,6 +7,8 @@ import (
 	goalusecase "github.com/yafetfaf07/personal_prod.git/internal/application/usecases/goal"
 	taskusecase "github.com/yafetfaf07/personal_prod.git/internal/application/usecases/task"
 	userusecase "github.com/yafetfaf07/personal_prod.git/internal/application/usecases/user"
+	questionusecase "github.com/yafetfaf07/personal_prod.git/internal/application/usecases/question"
+
 	"github.com/yafetfaf07/personal_prod.git/internal/config"
 	"github.com/yafetfaf07/personal_prod.git/internal/infrastructure/database"
 	"github.com/yafetfaf07/personal_prod.git/internal/infrastructure/http/handlers"
@@ -50,7 +52,12 @@ func main() {
 	goalUsecase := goalusecase.NewGoalService(goalRepo)
 	goalHandler := handlers.NewGoalHandler(goalUsecase)
 
-	r := router.SetupRouter(userHandler, taskHandler, goalHandler)
+	// Repo passed DB as DI
+	questionRepo := repository.NewQuestionRepo(db)
+	questionUsecase := questionusecase.NewQuestionService(questionRepo)
+	questionHandler := handlers.NewQuestionHandler(questionUsecase)
+
+	r := router.SetupRouter(userHandler, taskHandler, goalHandler, questionHandler)
 	log.Printf("Server running on port %s", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

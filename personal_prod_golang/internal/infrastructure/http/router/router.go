@@ -7,7 +7,7 @@ import (
 	"github.com/yafetfaf07/personal_prod.git/internal/infrastructure/http/handlers"
 )
 
-func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHandler, goalHandler *handlers.GoalHandler) *gin.Engine {
+func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHandler, goalHandler *handlers.GoalHandler, questionHandler *handlers.QuestionHandler) *gin.Engine {
 	r := gin.Default()
 
 	r.GET("/ping", func(c *gin.Context) {
@@ -30,7 +30,7 @@ func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHa
 	}
 	questionApi := r.Group("/api/v1/question")
 	{
-		questionApi.POST("/create/:id",)
+		questionApi.POST("/create/:id", questionHandler.AddQuestion())
 	}
 
 	return r
