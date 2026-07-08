@@ -31,6 +31,7 @@ func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHa
 	questionApi := r.Group("/api/v1/question")
 	{
 		questionApi.POST("/create/:id", questionHandler.AddQuestion())
+		questionApi.GET("/getQuestion/:id", questionHandler.GetQuestionsByTodoId())
 	}
 
 	return r

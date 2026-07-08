@@ -34,3 +34,19 @@ func(q *questionRepository) Create(ctx context.Context, question *entities.Quest
 		TodoId: question_db.TodoId.String(),
 	}, nil
 }
+
+func(q *questionRepository) GetAllQuestions(ctx context.Context, todoId string) (*[]entities.Question, error) {
+	var questions []dbmodels.QuestionDB
+	if err := q.db.WithContext(ctx).Where("todo_id = ?", todoId).Find(&questions).Error; err != nil {
+		return nil, err
+	}
+	var questionEntities []entities.Question
+	questionEntities=make([]entities.Question, len(questions))
+	for i, q := range questions {
+		
+		questionEntities[i].Text = q.Text
+		questionEntities[i].ID = q.ID.String()
+		questionEntities[i].TodoId = q.TodoId.String()
+	}
+	return &questionEntities, nil
+}

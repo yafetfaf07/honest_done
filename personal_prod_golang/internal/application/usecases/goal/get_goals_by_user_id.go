@@ -3,7 +3,6 @@ package usecases
 import (
 	"context"
 	"errors"
-	"log"
 
 	"github.com/google/uuid"
 	"github.com/yafetfaf07/personal_prod.git/internal/application/dtos"
