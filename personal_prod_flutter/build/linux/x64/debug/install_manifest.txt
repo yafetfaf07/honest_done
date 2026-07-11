@@ -1,0 +1,13 @@
+/home/yafetyosef/Desktop/personal_project_for_prod/personal_prod_flutter/build/linux/x64/debug/bundle/personal_prod
+/home/yafetyosef/Desktop/personal_project_for_prod/personal_prod_flutter/build/linux/x64/debug/bundle/data/icudtl.dat
+/home/yafetyosef/Desktop/personal_project_for_prod/personal_prod_flutter/build/linux/x64/debug/bundle/lib/libflutter_linux_gtk.so
+/home/yafetyosef/Desktop/personal_project_for_prod/personal_prod_flutter/build/linux/x64/debug/bundle/data/flutter_assets/NOTICES.Z
+/home/yafetyosef/Desktop/personal_project_for_prod/personal_prod_flutter/build/linux/x64/debug/bundle/data/flutter_assets/shaders/ink_sparkle.frag
+/home/yafetyosef/Desktop/personal_project_for_prod/personal_prod_flutter/build/linux/x64/debug/bundle/data/flutter_assets/shaders/stretch_effect.frag
+/home/yafetyosef/Desktop/personal_project_for_prod/personal_prod_flutter/build/linux/x64/debug/bundle/data/flutter_assets/FontManifest.json
+/home/yafetyosef/Desktop/personal_project_for_prod/personal_prod_flutter/build/linux/x64/debug/bundle/data/flutter_assets/AssetManifest.bin
+/home/yafetyosef/Desktop/personal_project_for_prod/personal_prod_flutter/build/linux/x64/debug/bundle/data/flutter_assets/kernel_blob.bin
+/home/yafetyosef/Desktop/personal_project_for_prod/personal_prod_flutter/build/linux/x64/debug/bundle/data/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf
+/home/yafetyosef/Desktop/personal_project_for_prod/personal_prod_flutter/build/linux/x64/debug/bundle/data/flutter_assets/version.json
+/home/yafetyosef/Desktop/personal_project_for_prod/personal_prod_flutter/build/linux/x64/debug/bundle/data/flutter_assets/fonts/MaterialIcons-Regular.otf
+/home/yafetyosef/Desktop/personal_project_for_prod/personal_prod_flutter/build/linux/x64/debug/bundle/data/flutter_assets/NativeAssetsManifest.json
