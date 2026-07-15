@@ -57,7 +57,7 @@ func main() {
 	questionUsecase := questionusecase.NewQuestionService(questionRepo)
 	questionHandler := handlers.NewQuestionHandler(questionUsecase)
 
-	r := router.SetupRouter(userHandler, taskHandler, goalHandler, questionHandler)
+	r := router.SetupRouter(userHandler, taskHandler, goalHandler, questionHandler,redisInit)
 	log.Printf("Server running on port %s", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
