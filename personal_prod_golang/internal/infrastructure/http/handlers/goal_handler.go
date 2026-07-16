@@ -41,6 +41,7 @@ func (h *GoalHandler) AddGoalHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		
 		c.JSON(http.StatusCreated, res)
 	}
 }

@@ -2,12 +2,15 @@ package router
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"github.com/yafetfaf07/personal_prod.git/internal/infrastructure/http/handlers"
+	"github.com/yafetfaf07/personal_prod.git/internal/infrastructure/http/middleware"
 )
 
-func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHandler, goalHandler *handlers.GoalHandler, questionHandler *handlers.QuestionHandler) *gin.Engine {
+func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHandler, goalHandler *handlers.GoalHandler, questionHandler *handlers.QuestionHandler, redisClient *redis.Client) *gin.Engine {
 	r := gin.Default()
 
 	r.GET("/ping", func(c *gin.Context) {
@@ -26,7 +29,7 @@ func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHa
 	goalApi := r.Group("/api/v1/goal")
 	{
 		goalApi.POST("/create/:id", goalHandler.AddGoalHandler())
-		goalApi.GET("/getGoal/:id", goalHandler.GetGoalsByUserIdHandler())
+		goalApi.GET("/getGoal/:id", middleware.RedisCacheMiddleWare(redisClient,5*time.Minute),goalHandler.GetGoalsByUserIdHandler())
 	}
 	questionApi := r.Group("/api/v1/question")
 	{

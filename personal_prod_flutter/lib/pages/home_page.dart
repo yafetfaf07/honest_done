@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:personal_prod/components/custom_circular_progress.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -104,8 +105,9 @@ class _HomePageState extends State<HomePage> {
                           ),
                           hintText: selectedDate == null
                               ? 'Select a date'
-                              : MaterialLocalizations.of(sheetContext)
-                                  .formatMediumDate(selectedDate!),
+                              : MaterialLocalizations.of(
+                                  sheetContext,
+                                ).formatMediumDate(selectedDate!),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -133,6 +135,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: Icon(Icons.menu),
         actions: [
           PopupMenuButton<String>(
             // This defines the icon that triggers the menu (replaces the IconButton)
@@ -189,21 +192,34 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Column(
         children: [
-          const SizedBox(height: 32),
-          const Center(child: Text("No Goals added yet!")),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: MediaQuery.of(context).size.width * 0.8,
-            child: ElevatedButton(
-              onPressed: _showAddGoalSheet,
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text("Add Goals"),
-                  SizedBox(width: 8),
-                  Icon(Icons.add),
-                ],
-              ),
+          const SizedBox(height: 30),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: const Text(
+              "WELCOME BACK",
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.white,
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  child: Column(
+                    children: [
+                      Text(
+                        "Focus Score",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text("You're in the top 5% of deep workers today!"),
+                    ],
+                  ),
+                ),
+                CustomCircularProgress(),
+              ],
             ),
           ),
         ],
