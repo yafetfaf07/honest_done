@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
 import 'package:personal_prod/components/custom_circular_progress.dart';
+import 'package:personal_prod/components/tasks_list.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -135,13 +137,10 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Icon(Icons.menu),
+        leading: const Icon(Icons.menu),
         actions: [
           PopupMenuButton<String>(
-            // This defines the icon that triggers the menu (replaces the IconButton)
             icon: const Icon(Icons.more_vert),
-
-            // What happens when an option is selected
             onSelected: (String value) {
               switch (value) {
                 case 'edit':
@@ -155,8 +154,6 @@ class _HomePageState extends State<HomePage> {
                   break;
               }
             },
-
-            // This builds the actual list of options
             itemBuilder: (BuildContext context) {
               return [
                 const PopupMenuItem<String>(
@@ -164,8 +161,7 @@ class _HomePageState extends State<HomePage> {
                   child: ListTile(
                     leading: Icon(Icons.edit, size: 20),
                     title: Text('Edit widget'),
-                    contentPadding:
-                        EdgeInsets.zero, // Cleans up internal spacing
+                    contentPadding: EdgeInsets.zero,
                   ),
                 ),
                 const PopupMenuItem<String>(
@@ -176,7 +172,7 @@ class _HomePageState extends State<HomePage> {
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
-                const PopupMenuDivider(), // Optional: adds a thin separating line
+                const PopupMenuDivider(),
                 const PopupMenuItem<String>(
                   value: 'delete',
                   child: ListTile(
@@ -190,39 +186,144 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 30),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: const Text(
-              "WELCOME BACK",
-              style: TextStyle(fontWeight: FontWeight.w500),
-            ),
+      // BottomBar now sits at the top level of the body layout
+      body: BottomBar(
+        layout: BottomBarLayout(
+          width: 280,
+          borderRadius: BorderRadius.circular(28),
+        ),
+        // The persistent floating widget UI layer
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.blueGrey.shade800,
+            borderRadius: BorderRadius.circular(28),
           ),
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.white,
-            ),
-            child: Row(
-              children: [
-                SizedBox(
-                  child: Column(
-                    children: [
-                      Text(
-                        "Focus Score",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+          alignment: Alignment.center,
+          child: const Text(
+            'This is the floating widget', 
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ),
+        // The main scrollable UI area
+        body: (context, scrollController) => SingleChildScrollView(
+          controller: scrollController, // Vital for linking BottomBar animation
+          child: Column(
+            children: [
+              const SizedBox(height: 30),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "WELCOME BACK",
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                height: 80,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 10,
+                    )
+                  ]
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Focus Score",
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "You're in the top 5% of deep workers today!",
+                            textAlign: TextAlign.start,
+                          ),
+                        ],
                       ),
-                      Text("You're in the top 5% of deep workers today!"),
+                    ),
+                    CustomCircularProgress(),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 220),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.grey.shade50,
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: _showAddGoalSheet, // Open the Add Goal Sheet on press
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.timer), 
+                      SizedBox(width: 8),
+                      Text("Start Focus Session")
                     ],
                   ),
                 ),
-                CustomCircularProgress(),
-              ],
-            ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white,
+                ),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "TODAY'S TASKS",
+                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                          ),
+                          TextButton(
+                            onPressed: () {},
+                            child: const Text(
+                              "View All",
+                              style: TextStyle(color: Colors.green),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ListView.builder(
+                      shrinkWrap: true, // Solves infinite height layouts safely
+                      physics: const NeverScrollableScrollPhysics(), // Defers scroll controls to SingleChildScrollView
+                      itemCount: 4,
+                      itemBuilder: (context, index) {
+                        return const TasksList();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 120), // Essential spacer so your floating bar doesn't obstruct any list content
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
