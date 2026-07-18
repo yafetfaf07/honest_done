@@ -1,7 +1,11 @@
+import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
 import 'package:personal_prod/components/custom_circular_progress.dart';
 import 'package:personal_prod/components/tasks_list.dart';
+import 'package:personal_prod/pages/analytics_page.dart';
+import 'package:personal_prod/pages/goals_page.dart';
+import 'package:personal_prod/pages/profile_page.dart';
+import 'package:personal_prod/pages/timer_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -10,133 +14,59 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
+final List<Icon> _icons = [
+  Icon(Icons.home),
+  Icon(Icons.track_changes),
+  Icon(Icons.timer_sharp),
+  Icon(Icons.bar_chart),
+  Icon(Icons.person_outline),
+];
+
+final List<String> _pageTitles = [
+  'Home',
+  'Goals',
+  'Timer',
+  'Analytics',
+  'Profile',
+];
+
 class _HomePageState extends State<HomePage> {
-  Future<void> _showAddGoalSheet() async {
-    final nameController = TextEditingController();
-    final descriptionController = TextEditingController();
-    DateTime? selectedDate;
+  int _selectedIndex = 0;
 
-    try {
-      await showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        builder: (BuildContext sheetContext) {
-          return StatefulBuilder(
-            builder: (BuildContext context, StateSetter setSheetState) {
-              Future<void> pickDate() async {
-                final DateTime now = DateTime.now();
-                final DateTime initialDate =
-                    selectedDate ?? DateTime(now.year, now.month, now.day);
-                final DateTime? pickedDate = await showDatePicker(
-                  context: sheetContext,
-                  initialDate: initialDate,
-                  firstDate: DateTime(now.year - 10),
-                  lastDate: DateTime(now.year + 10),
-                );
-
-                if (pickedDate != null) {
-                  setSheetState(() {
-                    selectedDate = pickedDate;
-                  });
-                }
-              }
-
-              return Padding(
-                padding: EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 20,
-                  bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 20,
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 44,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade400,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'Add Goal',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: nameController,
-                        textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Name',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: descriptionController,
-                        maxLines: 3,
-                        textInputAction: TextInputAction.newline,
-                        decoration: const InputDecoration(
-                          labelText: 'Description',
-                          alignLabelWithHint: true,
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        readOnly: true,
-                        onTap: pickDate,
-                        decoration: InputDecoration(
-                          labelText: 'Date',
-                          border: const OutlineInputBorder(),
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.calendar_month),
-                            onPressed: pickDate,
-                          ),
-                          hintText: selectedDate == null
-                              ? 'Select a date'
-                              : MaterialLocalizations.of(
-                                  sheetContext,
-                                ).formatMediumDate(selectedDate!),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(sheetContext).pop();
-                        },
-                        child: const Text('Save Goal'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      );
-    } finally {
-      nameController.dispose();
-      descriptionController.dispose();
-    }
-  }
+  late final List<Widget> _pages = [
+    const _HomeDashboard(),
+    const GoalsPage(),
+    const TimerPage(),
+    const AnalyticsPage(),
+    const ProfilePage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: AnimatedBottomNavigationBar.builder(
+        itemCount: _icons.length,
+        tabBuilder: (index, isActive) {
+          return Icon(
+            _icons[index].icon,
+            color: isActive ? Colors.green : Colors.grey,
+          );
+        },
+        activeIndex: _selectedIndex,
+        gapLocation: GapLocation.none,
+        notchSmoothness: NotchSmoothness.verySmoothEdge,
+
+        leftCornerRadius: 32,
+        rightCornerRadius: 32,
+        elevation: 10,
+        onTap: (int index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+      ),
       appBar: AppBar(
+        title: Text(_pageTitles[_selectedIndex]),
         leading: const Icon(Icons.menu),
         actions: [
           PopupMenuButton<String>(
@@ -186,144 +116,137 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      // BottomBar now sits at the top level of the body layout
-      body: BottomBar(
-        layout: BottomBarLayout(
-          width: 280,
-          borderRadius: BorderRadius.circular(28),
-        ),
-        // The persistent floating widget UI layer
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.blueGrey.shade800,
-            borderRadius: BorderRadius.circular(28),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: _pages[_selectedIndex],
+      ),
+    );
+  }
+}
+
+class _HomeDashboard extends StatelessWidget {
+  const _HomeDashboard();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      key: const ValueKey('home-dashboard'),
+      child: Column(
+        children: [
+          const SizedBox(height: 30),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'WELCOME BACK',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+            ),
           ),
-          alignment: Alignment.center,
-          child: const Text(
-            'This is the floating widget', 
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            height: 80,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 10,
+                ),
+              ],
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Focus Score',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      "You're in the top 5% of deep workers today!",
+                      textAlign: TextAlign.start,
+                    ),
+                  ],
+                ),
+                CustomCircularProgress(),
+              ],
+            ),
           ),
-        ),
-        // The main scrollable UI area
-        body: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController, // Vital for linking BottomBar animation
-          child: Column(
+          const SizedBox(height: 20),
+          SizedBox(
+            width: MediaQuery.of(context).size.width * 0.8,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.grey.shade50,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {},
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.timer),
+                  SizedBox(width: 8),
+                  Text('Start Focus Session'),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Column(
             children: [
-              const SizedBox(height: 30),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 6),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "WELCOME BACK",
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                height: 80,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
-                      blurRadius: 10,
-                    )
-                  ]
-                ),
-                child: const Row(
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Focus Score",
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            "You're in the top 5% of deep workers today!",
-                            textAlign: TextAlign.start,
-                          ),
-                        ],
+                    const Text(
+                      "TODAY'S TASKS",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
                       ),
                     ),
-                    CustomCircularProgress(),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 220),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.grey.shade50,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: _showAddGoalSheet, // Open the Add Goal Sheet on press
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.timer), 
-                      SizedBox(width: 8),
-                      Text("Start Focus Session")
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.white,
-                ),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "TODAY'S TASKS",
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            child: const Text(
-                              "View All",
-                              style: TextStyle(color: Colors.green),
-                            ),
-                          ),
-                        ],
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text(
+                        'View All',
+                        style: TextStyle(color: Colors.green),
                       ),
-                    ),
-                    ListView.builder(
-                      shrinkWrap: true, // Solves infinite height layouts safely
-                      physics: const NeverScrollableScrollPhysics(), // Defers scroll controls to SingleChildScrollView
-                      itemCount: 4,
-                      itemBuilder: (context, index) {
-                        return const TasksList();
-                      },
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 120), // Essential spacer so your floating bar doesn't obstruct any list content
+              SizedBox(
+                height: 200,
+                child: ListView.builder(
+                  itemCount: 4,
+                  itemBuilder: (context, index) {
+                    return const TasksList();
+                  },
+                ),
+              ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
