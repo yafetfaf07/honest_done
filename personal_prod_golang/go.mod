@@ -6,6 +6,7 @@ require github.com/golang-jwt/jwt v3.2.2+incompatible
 
 require (
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 )
 

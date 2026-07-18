@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"github.com/yafetfaf07/personal_prod.git/internal/application/dtos"
 	usecase "github.com/yafetfaf07/personal_prod.git/internal/application/usecases/goal"
 )
@@ -20,7 +22,7 @@ func NewGoalHandler(goalService *usecase.GoalService) *GoalHandler {
 	return &GoalHandler{goalService: goalService}
 }
 
-func (h *GoalHandler) AddGoalHandler() gin.HandlerFunc {
+func (h *GoalHandler) AddGoalHandler(redis *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 		defer cancel()
@@ -40,6 +42,10 @@ func (h *GoalHandler) AddGoalHandler() gin.HandlerFunc {
 		if err!=nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
+		}
+		err=redis.Del(ctx,"/getGoal/:id").Err()
+			if err != nil {
+			fmt.Printf("Failed to delete cache: %v\n", err)
 		}
 		
 		c.JSON(http.StatusCreated, res)

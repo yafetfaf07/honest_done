@@ -3,11 +3,13 @@ package handlers
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"github.com/yafetfaf07/personal_prod.git/internal/application/dtos"
 	usecase "github.com/yafetfaf07/personal_prod.git/internal/application/usecases/task"
 )
@@ -24,7 +26,7 @@ func NewTaskHandler (service *usecase.TaskService) *TaskHandler{
 	}
 }
 
-func( t *TaskHandler) AddTaskHandler() gin.HandlerFunc {
+func( t *TaskHandler) AddTaskHandler(redis *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		
 		ctx,cancel:=context.WithTimeout(c.Request.Context(),5*time.Second)
@@ -51,6 +53,11 @@ func( t *TaskHandler) AddTaskHandler() gin.HandlerFunc {
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"Unknown error happened": err.Error()})
 		return
+	}
+	err=redis.Del(ctx,"/getTask/:id").Err()
+	if err!=nil {
+		log.Println("Falied to delete cache ")
+		
 	}
 	c.JSON(http.StatusCreated, res)
 	}
