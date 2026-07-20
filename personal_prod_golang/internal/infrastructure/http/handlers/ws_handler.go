@@ -1,51 +1,72 @@
-// internal/infrastructure/http/handlers/ws_handler.go
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
-// Define the upgrader - this converts HTTP to WS
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	// ⚠️ IMPORTANT: Allow all origins for development. 
-	// Restrict this in production!
-	CheckOrigin: func(r *http.Request) bool { return true },
+	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-type WsHandler struct{}
+type WsHandler struct {
+	connManager *ConnectionManager
+}
 
-func NewWsHandler() *WsHandler {
-	return &WsHandler{}
+func NewWsHandler(connManager *ConnectionManager) *WsHandler {
+	return &WsHandler{
+		connManager: connManager,
+	}
 }
 
 func (h *WsHandler) Connect() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 1. Upgrade HTTP connection to WebSocket
+		// Get user ID from query params or auth header
+		userID := c.Query("user_id")
+		if userID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "user_id is required"})
+			return
+		}
+
+		// Upgrade HTTP connection to WebSocket
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upgrade connection"})
 			return
 		}
-		defer conn.Close() // Always close the connection when done
 
-		// 2. Infinite loop to listen for messages
-		for {
-			messageType, message, err := conn.ReadMessage()
-			if err != nil {
-				// Client disconnected or error occurred
-				break
-			}
+		// Register connection
+		h.connManager.AddConnection(userID, conn)
+		log.Printf("User %s connected via WebSocket", userID)
 
-			// 3. Echo the message back (Basic test)
-			err = conn.WriteMessage(messageType, message)
-			if err != nil {
-				break
+		// Listen for messages and cleanup on disconnect
+		go func() {
+			defer func() {
+				h.connManager.RemoveConnection(userID)
+				conn.Close()
+				log.Printf("User %s disconnected", userID)
+			}()
+
+			for {
+				messageType, message, err := conn.ReadMessage()
+				if err != nil {
+					if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+						log.Printf("WebSocket error: %v", err)
+					}
+					break
+				}
+
+				// Echo back or handle incoming messages
+				err = conn.WriteMessage(messageType, message)
+				if err != nil {
+					break
+				}
 			}
-		}
+		}()
 	}
 }

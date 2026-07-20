@@ -1,13 +1,15 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
+	"github.com/yafetfaf07/personal_prod.git/internal/application/services"
 	goalusecase "github.com/yafetfaf07/personal_prod.git/internal/application/usecases/goal"
+	questionusecase "github.com/yafetfaf07/personal_prod.git/internal/application/usecases/question"
 	taskusecase "github.com/yafetfaf07/personal_prod.git/internal/application/usecases/task"
 	userusecase "github.com/yafetfaf07/personal_prod.git/internal/application/usecases/user"
-	questionusecase "github.com/yafetfaf07/personal_prod.git/internal/application/usecases/question"
 
 	"github.com/yafetfaf07/personal_prod.git/internal/config"
 	"github.com/yafetfaf07/personal_prod.git/internal/infrastructure/database"
@@ -57,9 +59,19 @@ func main() {
 	questionUsecase := questionusecase.NewQuestionService(questionRepo)
 	questionHandler := handlers.NewQuestionHandler(questionUsecase)
 
-	// websocket handler
-	websocketHandler:=handlers.NewWsHandler()
-	r := router.SetupRouter(userHandler, taskHandler, goalHandler, questionHandler,redisInit,websocketHandler )
+	// Initialize connection manager for WebSocket
+	connManager := handlers.NewConnectionManager()
+
+	// websocket handler with connection manager
+	websocketHandler := handlers.NewWsHandler(connManager)
+
+	// Initialize notification service
+	notificationService := services.NewNotificationService(taskRepo, connManager)
+
+	// Start the background task reminder scheduler
+	go notificationService.StartTaskReminderScheduler(context.Background())
+
+	r := router.SetupRouter(userHandler, taskHandler, goalHandler, questionHandler, redisInit, websocketHandler)
 	log.Printf("Server running on port %s", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

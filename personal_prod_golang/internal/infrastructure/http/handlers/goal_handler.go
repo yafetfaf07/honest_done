@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -33,21 +33,21 @@ func (h *GoalHandler) AddGoalHandler(redis *redis.Client) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "the params should be type of uuid"})
 			return
 		}
-		if err:=c.ShouldBindBodyWithJSON(&request); err!=nil {
+		if err := c.ShouldBindBodyWithJSON(&request); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		res,err:=h.goalService.CreateGoal(ctx,&request,user_id.String())
+		res, err := h.goalService.CreateGoal(ctx, &request, user_id.String())
 
-		if err!=nil {
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		err=redis.Del(ctx,"/getGoal/:id").Err()
-			if err != nil {
-			fmt.Printf("Failed to delete cache: %v\n", err)
+		err = redis.Del(ctx, "/api/v1/goal/getGoal/"+id).Err()
+		if err != nil {
+			log.Printf("Failed to delete cache: %v\n", err)
 		}
-		
+
 		c.JSON(http.StatusCreated, res)
 	}
 }
@@ -57,8 +57,8 @@ func (h *GoalHandler) GetGoalsByUserIdHandler() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 		defer cancel()
 		id := c.Param("id")
-		if id=="" {
-			c.JSON(http.StatusBadRequest, gin.H{"error":"params can't be empty"})
+		if id == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "params can't be empty"})
 			return
 		}
 		user_id, err := uuid.Parse(id)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"github.com/yafetfaf07/personal_prod.git/internal/application/dtos"
 	usecase "github.com/yafetfaf07/personal_prod.git/internal/application/usecases/question"
 )
@@ -50,7 +51,7 @@ func (q *QuestionHandler) GetQuestionsByTodoId() gin.HandlerFunc {
 	}
 }
 
-func (q *QuestionHandler) AddQuestion() gin.HandlerFunc {
+func (q *QuestionHandler) AddQuestion(redisClient *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 		defer cancel()
@@ -71,6 +72,7 @@ func (q *QuestionHandler) AddQuestion() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		err = redisClient.Del(ctx, "/getQuestion/" + id).Err()
 		c.JSON(http.StatusCreated, res)
 	}
 }

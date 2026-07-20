@@ -36,7 +36,7 @@ func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHa
 	}
 	questionApi := r.Group("/api/v1/question")
 	{
-		questionApi.POST("/create/:id", questionHandler.AddQuestion())
+		questionApi.POST("/create/:id", questionHandler.AddQuestion(redisClient))
 		questionApi.GET("/getQuestion/:id ", middleware.RedisCacheMiddleWare(redisClient,5*time.Minute),questionHandler.GetQuestionsByTodoId())
 	}
 
