@@ -67,7 +67,7 @@ func (t *TaskHandler) GetTaskByUserIdHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 		defer cancel()
-		userId := c.Param("id")
+		userId := c.GetString("user_id")
 		tasks, err := t.taskService.GetTask(ctx, userId)
 
 		if err != nil {

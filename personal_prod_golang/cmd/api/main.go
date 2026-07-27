@@ -38,11 +38,12 @@ func main() {
 	}
 	defer redisInit.Close()
 	hashService := security.NewBcrypt()
+	jwtService := security.NewJWTService(cfg.JWTSecret)
 
 	// Use case passed repo as DI
 	userRepo := repository.NewUserRepo(db)
-	userUsecase := userusecase.NewUserService(userRepo, hashService)
-	userHandler := handlers.NewUserHandler(userUsecase)
+	userUsecase := userusecase.NewUserService(userRepo, hashService, jwtService)
+	userHandler := handlers.NewUserHandler(userUsecase, jwtService)
 
 	// Repo passed DB as DI
 	taskRepo := repository.NewTaskRepo(db)
@@ -71,7 +72,7 @@ func main() {
 	// Start the background task reminder scheduler
 	go notificationService.StartTaskReminderScheduler(context.Background())
 
-	r := router.SetupRouter(userHandler, taskHandler, goalHandler, questionHandler, redisInit, websocketHandler)
+	r := router.SetupRouter(userHandler, taskHandler, goalHandler, questionHandler, redisInit, websocketHandler, jwtService)
 	log.Printf("Server running on port %s", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

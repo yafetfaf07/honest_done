@@ -10,6 +10,7 @@ type Config struct {
 	DatabaseURL string
 	RedisAddr string
 	Port string
+	JWTSecret string
 }
 
 // This is for loading Environment variables
@@ -24,6 +25,7 @@ func Load() (*Config,error) {
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 		Port: os.Getenv("PORT"),
 		RedisAddr: os.Getenv("REDIS_ADDR"),
+		JWTSecret: os.Getenv("JWT_SECRET"),
 	}
 
 	return config,nil

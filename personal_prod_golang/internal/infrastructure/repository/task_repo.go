@@ -91,8 +91,8 @@ func (t *taskRepository) GetTaskByUserId(ctx context.Context, goalId string) (*[
 		tasksEntity = append(tasksEntity, entities.Task{
 			ID:            task.ID.String(),
 			Title:         task.Title,
-			ScheduleTime:  task.ScheduleTime,
-			CompletedTime: task.CompletedTime,
+			ScheduleTime:  task.ScheduleTime.UTC(),
+			CompletedTime: task.CompletedTime.UTC(),
 			Status:        task.Status,
 			GoalID:        task.GoalID.String(),
 		})

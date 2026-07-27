@@ -12,18 +12,19 @@ import (
 // DI
 type UserService struct {
 	userRepo     interfaces.IUserRepo
-	hashService security.Bcrypt
+	hashService  security.Bcrypt
+	jwtService   *security.JWTService
 }
 
-func NewUserService(repo interfaces.IUserRepo, hashService *security.Bcrypt) *UserService {
+func NewUserService(repo interfaces.IUserRepo, hashService *security.Bcrypt, jwtService *security.JWTService) *UserService {
 	return &UserService{
-		userRepo: repo,
+		userRepo:    repo,
 		hashService: *hashService,
+		jwtService:  jwtService,
 	}
 }
 
 func (u *UserService) Register(ctx context.Context, dto *dtos.CreateUser) (*dtos.CreateAndLoginResponse, error) {
-	// Map the DTO to their respective entities
 	hashedPassword, err := u.hashService.HashPassword(dto.Password)
 	if err != nil {
 		return nil, err
@@ -34,14 +35,26 @@ func (u *UserService) Register(ctx context.Context, dto *dtos.CreateUser) (*dtos
 		Email:    dto.Email,
 	}
 
-	// Call repo pass entity then get back entity for user id purposes
 	savedUser, err := u.userRepo.Create(ctx, userEntity)
 	if err != nil {
 		return nil, err
 	}
+
+	accessToken, err := u.jwtService.GenerateAccessToken(savedUser.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken, err := u.jwtService.GenerateRefreshToken(savedUser.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &dtos.CreateAndLoginResponse{
-		ID:    savedUser.ID,
-		Name:  savedUser.Name,
-		Email: savedUser.Email,
+		ID:           savedUser.ID,
+		Name:         savedUser.Name,
+		Email:        savedUser.Email,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}, nil
 }
