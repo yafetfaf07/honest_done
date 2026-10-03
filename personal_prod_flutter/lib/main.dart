@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:personal_prod/pages/onboard/onboard_page1.dart';
+import 'package:personal_prod/theme/app_theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -9,20 +9,15 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        scaffoldBackgroundColor: Colors.grey.shade100,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xff57b553),
-        ),
-        textTheme: GoogleFonts.outfitTextTheme(Theme.of(context).textTheme),
-      ),
-      home: FirstPage(),
+      title: 'Finch',
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.system,
+      home: const FirstPage(),
     );
   }
 }

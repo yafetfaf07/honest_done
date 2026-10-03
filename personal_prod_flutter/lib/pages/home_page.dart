@@ -6,6 +6,8 @@ import 'package:personal_prod/pages/analytics_page.dart';
 import 'package:personal_prod/pages/goals_page.dart';
 import 'package:personal_prod/pages/profile_page.dart';
 import 'package:personal_prod/pages/timer_page.dart';
+import 'package:personal_prod/theme/colors.dart';
+import 'package:personal_prod/theme/spacing.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,12 +16,12 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-final List<Icon> _icons = [
-  Icon(Icons.home),
-  Icon(Icons.track_changes),
-  Icon(Icons.timer_sharp),
-  Icon(Icons.bar_chart),
-  Icon(Icons.person_outline),
+final List<IconData> _icons = [
+  Icons.home,
+  Icons.track_changes,
+  Icons.timer_sharp,
+  Icons.bar_chart,
+  Icons.person_outline,
 ];
 
 final List<String> _pageTitles = [
@@ -43,13 +45,15 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Scaffold(
       bottomNavigationBar: AnimatedBottomNavigationBar.builder(
         itemCount: _icons.length,
         tabBuilder: (index, isActive) {
           return Icon(
-            _icons[index].icon,
-            color: isActive ? Colors.green : Colors.grey,
+            _icons[index],
+            color: isActive ? colors.accentSolid : colors.textMuted,
           );
         },
         activeIndex: _selectedIndex,
@@ -74,13 +78,10 @@ class _HomePageState extends State<HomePage> {
             onSelected: (String value) {
               switch (value) {
                 case 'edit':
-                  // Handle edit action
                   break;
                 case 'delete':
-                  // Handle delete action
                   break;
                 case 'share':
-                  // Handle share action
                   break;
               }
             },
@@ -103,11 +104,14 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 const PopupMenuDivider(),
-                const PopupMenuItem<String>(
+                PopupMenuItem<String>(
                   value: 'delete',
                   child: ListTile(
-                    leading: Icon(Icons.delete, color: Colors.red, size: 20),
-                    title: Text('Delete', style: TextStyle(color: Colors.red)),
+                    leading: Icon(Icons.delete, size: 20, color: colors.dangerText),
+                    title: Text(
+                      'Delete',
+                      style: TextStyle(color: colors.dangerText),
+                    ),
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
@@ -129,71 +133,75 @@ class _HomeDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return SingleChildScrollView(
       key: const ValueKey('home-dashboard'),
-      child: Column(
-        children: [
-          const SizedBox(height: 30),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 6),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'WELCOME BACK',
-                style: TextStyle(fontWeight: FontWeight.w500),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.layoutMargin,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: AppSpacing.spaceXl),
+            Text(
+              'WELCOME BACK',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: colors.textSecondary,
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            height: 80,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
-                  blurRadius: 10,
-                ),
-              ],
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Focus Score',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+            const SizedBox(height: AppSpacing.spaceSm),
+            Container(
+              constraints: const BoxConstraints(minHeight: 80),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.spaceMd,
+                vertical: AppSpacing.spaceSm,
+              ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: colors.bgSurface,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 10,
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Focus Score',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.spaceXs),
+                        Text(
+                          "You're in the top 5% of deep workers today!",
+                          style: TextStyle(color: colors.textSecondary),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      "You're in the top 5% of deep workers today!",
-                      textAlign: TextAlign.start,
-                    ),
-                  ],
-                ),
-                CustomCircularProgress(),
-              ],
+                  ),
+                  const SizedBox(width: AppSpacing.spaceSm),
+                  const CustomCircularProgress(),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: MediaQuery.of(context).size.width * 0.8,
-            child: ElevatedButton(
+            const SizedBox(height: AppSpacing.spaceXl),
+            ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.grey.shade50,
                 padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 16,
+                  vertical: AppSpacing.spaceMd,
+                  horizontal: AppSpacing.spaceLg,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -204,49 +212,39 @@ class _HomeDashboard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.timer),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppSpacing.spaceSm),
                   Text('Start Focus Session'),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "TODAY'S TASKS",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'View All',
-                        style: TextStyle(color: Colors.green),
-                      ),
-                    ),
-                  ],
+            const SizedBox(height: AppSpacing.spaceMd),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "TODAY'S TASKS",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: colors.textSecondary,
+                  ),
                 ),
-              ),
-              SizedBox(
-                height: 200,
-                child: ListView.builder(
-                  itemCount: 4,
-                  itemBuilder: (context, index) {
-                    return const TasksList();
-                  },
+                TextButton(
+                  onPressed: () {},
+                  child: const Text('View All'),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+            const SizedBox(height: AppSpacing.spaceSm),
+            const Column(
+              children: [
+                TasksList(),
+                TasksList(),
+                TasksList(),
+                TasksList(),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

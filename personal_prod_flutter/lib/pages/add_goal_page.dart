@@ -1,5 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:personal_prod/theme/colors.dart';
+import 'package:personal_prod/theme/spacing.dart';
 
 class AddGoalPage extends StatefulWidget {
   const AddGoalPage({super.key});
@@ -82,6 +84,8 @@ class _AddGoalPageState extends State<AddGoalPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     final progress = switch (_stepIndex) {
       0 => _stepOneProgress,
       1 => _stepTwoProgress,
@@ -107,9 +111,12 @@ class _AddGoalPageState extends State<AddGoalPage> {
     };
 
     final subtitle = switch (_stepIndex) {
-      0 => 'Clear goals are the first step to massive momentum. What are we forging today?',
-      1 => 'Paste a YouTube or website link, then upload a PDF or DOCX resource if you have one.',
-      _ => 'Write down the plan and the actions you want to complete for this goal.',
+      0 =>
+        'Clear goals are the first step to massive momentum. What are we forging today?',
+      1 =>
+        'Paste a YouTube or website link, then upload a PDF or DOCX resource if you have one.',
+      _ =>
+        'Write down the plan and the actions you want to complete for this goal.',
     };
 
     return Scaffold(
@@ -121,18 +128,19 @@ class _AddGoalPageState extends State<AddGoalPage> {
         width: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Colors.green.withOpacity(0.05),
-              Colors.blue.withOpacity(0.03),
-              Colors.white,
-            ],
+            colors: [colors.accentSubtle, colors.bgSurface],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.layoutMargin,
+              AppSpacing.spaceMd,
+              AppSpacing.layoutMargin,
+              AppSpacing.spaceXl,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -142,7 +150,7 @@ class _AddGoalPageState extends State<AddGoalPage> {
                     Text(
                       stepLabel,
                       style: TextStyle(
-                        color: Colors.green.shade700,
+                        color: colors.accentText,
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
                       ),
@@ -150,76 +158,68 @@ class _AddGoalPageState extends State<AddGoalPage> {
                     Text(
                       completionLabel,
                       style: TextStyle(
-                        color: Colors.grey.shade800,
+                        color: colors.textSecondary,
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: AppSpacing.spaceSm),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(999),
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 9,
-                    backgroundColor: Colors.blueGrey.shade100,
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      Color(0xff38c46d),
-                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.spaceXl),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.w800,
                     height: 1.05,
+                    color: colors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.spaceMd),
                 Text(
                   subtitle,
                   style: TextStyle(
                     fontSize: 18,
                     height: 1.45,
-                    color: Colors.grey.shade700,
+                    color: colors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.spaceXl),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 220),
                   child: switch (_stepIndex) {
                     0 => _StepOne(
-                        key: const ValueKey('step-1'),
-                        goalTitleController: _goalTitleController,
-                        targetDateController: _targetDateController,
-                        onPickDate: _pickTargetDate,
-                      ),
+                      key: const ValueKey('step-1'),
+                      goalTitleController: _goalTitleController,
+                      targetDateController: _targetDateController,
+                      onPickDate: _pickTargetDate,
+                    ),
                     1 => _StepTwo(
-                        key: const ValueKey('step-2'),
-                        resourcesController: _resourcesController,
-                        selectedFileName: _selectedResourceFile,
-                        onPickFile: _pickResourceFile,
-                      ),
+                      key: const ValueKey('step-2'),
+                      resourcesController: _resourcesController,
+                      selectedFileName: _selectedResourceFile,
+                      onPickFile: _pickResourceFile,
+                    ),
                     _ => _StepThree(
-                        key: const ValueKey('step-3'),
-                        plansController: _plansController,
-                      ),
+                      key: const ValueKey('step-3'),
+                      plansController: _plansController,
+                    ),
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.spaceXl),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xff38c46d),
-                      foregroundColor: Colors.black87,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(28),
-                      ),
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.spaceLg),
                       elevation: 0,
                     ),
                     onPressed: _goForward,
@@ -227,8 +227,8 @@ class _AddGoalPageState extends State<AddGoalPage> {
                       _stepIndex == 0
                           ? 'Continue to Resources'
                           : _stepIndex == 1
-                              ? 'Continue to Plans'
-                              : 'Save Goal',
+                          ? 'Continue to Plans'
+                          : 'Save Goal',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -236,13 +236,13 @@ class _AddGoalPageState extends State<AddGoalPage> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.spaceMd),
                 TextButton(
                   onPressed: _goBack,
                   child: Text(
                     _stepIndex == 0 ? 'Cancel' : 'Back',
                     style: TextStyle(
-                      color: Colors.grey.shade700,
+                      color: colors.textSecondary,
                       fontSize: 16,
                     ),
                   ),
@@ -275,65 +275,35 @@ class _StepOne extends StatelessWidget {
       children: [
         TextField(
           controller: goalTitleController,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             hintText: 'Goal Title',
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: 18,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: Colors.grey.shade400),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: Colors.grey.shade400),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.spaceLg,
+              vertical: AppSpacing.spaceLg,
             ),
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: AppSpacing.spaceMd),
         TextField(
           maxLines: 5,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             hintText: 'How will you achieve this?',
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.all(18),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: Colors.grey.shade400),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: Colors.grey.shade400),
-            ),
+            contentPadding: EdgeInsets.all(AppSpacing.spaceLg),
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: AppSpacing.spaceMd),
         GestureDetector(
           onTap: onPickDate,
           child: AbsorbPointer(
             child: TextField(
               controller: targetDateController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Target Date',
                 hintText: 'mm / dd / yyyy',
-                suffixIcon: const Icon(Icons.calendar_month_outlined),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(
+                suffixIcon: Icon(Icons.calendar_month_outlined),
+                contentPadding: EdgeInsets.symmetric(
                   horizontal: 18,
                   vertical: 18,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide(color: Colors.grey.shade400),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide(color: Colors.grey.shade400),
                 ),
               ),
             ),
@@ -363,25 +333,15 @@ class _StepTwo extends StatelessWidget {
       children: [
         TextField(
           controller: resourcesController,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             hintText: 'YouTube link or website link',
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: 18,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: Colors.grey.shade400),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: Colors.grey.shade400),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.spaceLg,
+              vertical: AppSpacing.spaceLg,
             ),
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: AppSpacing.spaceMd),
         OutlinedButton.icon(
           onPressed: onPickFile,
           icon: const Icon(Icons.upload_file),
@@ -392,12 +352,9 @@ class _StepTwo extends StatelessWidget {
           ),
           style: OutlinedButton.styleFrom(
             minimumSize: const Size.fromHeight(56),
-            side: BorderSide(color: Colors.grey.shade400),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
             ),
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black87,
           ),
         ),
       ],
@@ -421,19 +378,10 @@ class _StepThree extends StatelessWidget {
         TextField(
           controller: plansController,
           maxLines: 8,
-          decoration: InputDecoration(
-            hintText: 'Tell us your plans and the things you want to achieve...',
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.all(18),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: Colors.grey.shade400),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: Colors.grey.shade400),
-            ),
+          decoration: const InputDecoration(
+            hintText:
+                'Tell us your plans and the things you want to achieve...',
+            contentPadding: EdgeInsets.all(AppSpacing.spaceLg),
           ),
         ),
       ],

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:personal_prod/theme/colors.dart';
+import 'package:personal_prod/theme/spacing.dart';
 
 class TasksList extends StatefulWidget {
   const TasksList({super.key});
@@ -8,22 +10,26 @@ class TasksList extends StatefulWidget {
 }
 
 class _TasksListState extends State<TasksList> {
-  // Track whether this specific task is selected/completed
   bool isSelected = false;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+      margin: const EdgeInsets.symmetric(vertical: AppSpacing.spaceSm),
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14), // Tweaked slightly for radio alignment
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.spaceMd,
+        vertical: AppSpacing.spaceLg,
+      ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.bgSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEAECEF)),
+        border: Border.all(color: colors.borderSubtle),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -31,21 +37,18 @@ class _TasksListState extends State<TasksList> {
       ),
       child: Row(
         children: [
-          // Substituted your static Container icon with a functional Radio button
           Radio<bool>(
-            value: true, 
-            groupValue: isSelected, 
-            activeColor: const Color(0xFF2ED36B), // The green from your original design
-            toggleable: true, // Allows unchecking by tapping it again
+            value: true,
+            groupValue: isSelected,
+            toggleable: true,
             onChanged: (bool? value) {
               setState(() {
-                // If it's already true, uncheck it (set to false). Otherwise, check it.
                 isSelected = value ?? false;
               });
             },
           ),
-          const SizedBox(width: 4), // Adjusted spacing slightly to balance out Radio margins
-          const Expanded(
+          const SizedBox(width: AppSpacing.spaceXs),
+          Expanded(
             child: Text(
               'Brand Identity Design',
               maxLines: 1,
@@ -53,17 +56,17 @@ class _TasksListState extends State<TasksList> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF1F2430),
+                color: colors.textPrimary,
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          const Text(
+          const SizedBox(width: AppSpacing.spaceMd),
+          Text(
             '14:00',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF596272),
+              color: colors.textSecondary,
             ),
           ),
         ],
