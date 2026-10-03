@@ -3,7 +3,7 @@ package dbmodels
 import (
 	"time"
 
-"github.com/google/uuid" 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 

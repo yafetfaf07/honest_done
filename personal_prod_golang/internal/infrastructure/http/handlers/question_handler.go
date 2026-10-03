@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"context"
+	"errors"
+	"log"
 	"net/http"
 	"time"
 
@@ -10,6 +12,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/yafetfaf07/personal_prod.git/internal/application/dtos"
 	usecase "github.com/yafetfaf07/personal_prod.git/internal/application/usecases/question"
+	"github.com/yafetfaf07/personal_prod.git/internal/infrastructure/http/middleware"
 )
 
 type QuestionHandler struct {
@@ -69,10 +72,21 @@ func (q *QuestionHandler) AddQuestion(redisClient *redis.Client) gin.HandlerFunc
 		}
 		res, err := q.questionService.CreateQuestion(ctx, &request, todo_id.String())
 		if err != nil {
+			// A malformed question is the caller's mistake, not a server fault.
+			if errors.Is(err, usecase.ErrNoOptionsProvided) || errors.Is(err, usecase.ErrMultipleCorrect) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		err = redisClient.Del(ctx, "/getQuestion/" + id).Err()
+		// Cache key is per-user and built from the concrete request path, so the
+		// parameterised /getQuestion/:id has to be expanded to match.
+		userId := c.GetString("user_id")
+		cacheKey := middleware.CacheKey(userId, "/api/v1/question/getQuestion/"+todo_id.String())
+		if err := redisClient.Del(ctx, cacheKey).Err(); err != nil {
+			log.Printf("failed to invalidate question cache: %v", err)
+		}
 		c.JSON(http.StatusCreated, res)
 	}
 }

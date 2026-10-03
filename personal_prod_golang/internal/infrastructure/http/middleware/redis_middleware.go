@@ -21,10 +21,23 @@ func (w *responseBodyWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
+// CacheKey builds a per-user cache key. The user id has to be part of the key:
+// keying on the request path alone serves one user's goals to every other user,
+// because /getGoal is a single shared path.
+func CacheKey(userId string, path string) string {
+	return "cache:" + userId + ":" + path
+}
+
 func RedisCacheMiddleWare(rdb *redis.Client, duration time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Consider using a more specific key to avoid collisions
-		cacheKey := "goal:" + c.Request.URL.RequestURI()
+		// Runs after AuthMiddleWare so user_id is populated. Without it there is
+		// no safe key, so let the request through uncached.
+		userId := c.GetString("user_id")
+		if userId == "" {
+			c.Next()
+			return
+		}
+		cacheKey := CacheKey(userId, c.Request.URL.Path)
 
 		// 1. Try to fetch from Redis
 		val, err := rdb.Get(c.Request.Context(), cacheKey).Result()
@@ -40,7 +53,7 @@ func RedisCacheMiddleWare(rdb *redis.Client, duration time.Duration) gin.Handler
 		// 2. Cache Miss: Record the response
 		log.Printf("Cache MISS for key: %s", cacheKey)
 		c.Header("X-Cache", "MISS")
-		
+
 		writer := &responseBodyWriter{
 			body:           &bytes.Buffer{},
 			ResponseWriter: c.Writer,

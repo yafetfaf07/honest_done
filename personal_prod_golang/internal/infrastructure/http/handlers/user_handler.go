@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -34,7 +36,15 @@ func (u *Userhandler) Register() gin.HandlerFunc {
 		}
 		res, err := u.userService.Register(ctx, &request)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			switch {
+			case errors.Is(err, usecases.ErrEmailAlreadyExists):
+				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			case errors.Is(err, usecases.ErrInvalidEmail),
+				errors.Is(err, usecases.ErrInvalidPassword):
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			default:
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			}
 			return
 		}
 
@@ -57,9 +67,15 @@ func (u *Userhandler) Login() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		// Match the normalisation used at registration, otherwise the lookup
+		// misses an account registered as Foo@Bar.com.
+		request.Email = strings.ToLower(strings.TrimSpace(request.Email))
+
 		res, err := u.userService.Login(ctx, &request)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			// Distinguishing "no such user" from "wrong password" would leak
+			// which emails are registered, so both stay a flat 401.
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password"})
 			return
 		}
 
@@ -76,19 +92,29 @@ func (u *Userhandler) Login() gin.HandlerFunc {
 func (u *Userhandler) Refresh() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		refreshToken, err := c.Cookie("refresh_token")
+
+		// A browser sends the http-only cookie automatically. A native client
+		// has no cookie jar, so it reads the set-cookie header itself and sends
+		// the token back in the body instead.
 		if err != nil || refreshToken == "" {
+			var body dtos.RefreshTokenRequest
+			if bindErr := c.ShouldBindBodyWithJSON(&body); bindErr == nil {
+				refreshToken = body.RefreshToken
+			}
+		}
+
+		if refreshToken == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token not found"})
 			return
 		}
 
 		claims, err := u.jwtService.ValidateToken(refreshToken, "refresh")
 		if err != nil {
-			statusCode := http.StatusUnauthorized
 			message := "Invalid refresh token"
 			if err == security.ErrTokenExpired {
 				message = "Token expired please login"
 			}
-			c.JSON(statusCode, gin.H{"error": message})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": message})
 			return
 		}
 
@@ -104,9 +130,41 @@ func (u *Userhandler) Refresh() gin.HandlerFunc {
 			return
 		}
 
+		// Rotate the refresh token on every use so a captured one has a short
+		// useful life.
+		newRefreshToken, err := u.jwtService.GenerateRefreshToken(userId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate refresh token"})
+			return
+		}
+		setRefreshTokenCookie(c, newRefreshToken)
+
 		c.JSON(http.StatusOK, gin.H{
-			"access_token": newAccessToken,
+			"access_token":  newAccessToken,
+			"refresh_token": newRefreshToken,
 		})
+	}
+}
+
+// Me returns the authenticated user's profile, so the client can restore a
+// session without relying on whatever the login response cached.
+func (u *Userhandler) Me() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+		defer cancel()
+
+		userId := c.GetString("user_id")
+		if userId == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthenticated"})
+			return
+		}
+
+		res, err := u.userService.GetMe(ctx, userId)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+		c.JSON(http.StatusOK, res)
 	}
 }
 

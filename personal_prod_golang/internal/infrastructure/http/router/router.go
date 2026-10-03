@@ -23,32 +23,37 @@ func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHa
 		wsApi.GET("/ws", wsHandler.Connect())
 	}
 
+	authMiddleware := middleware.AuthMiddleWare(jwtService)
+
 	userApi := r.Group("/api/v1/user")
 	{
 		userApi.POST("/register", userHandler.Register())
 		userApi.POST("/login", userHandler.Login())
 		userApi.POST("/refresh", userHandler.Refresh())
 		userApi.POST("/logout", userHandler.Logout())
+		userApi.GET("/me", authMiddleware, userHandler.Me())
 	}
-
-	authMiddleware := middleware.AuthMiddleWare(jwtService)
 
 	taskApi := r.Group("/api/v1/task")
 	{
 		taskApi.POST("/create/:goal_id", authMiddleware, taskHandler.AddTaskHandler(redisClient))
 		taskApi.GET("/getTask", authMiddleware, middleware.RedisCacheMiddleWare(redisClient, 5*time.Minute), taskHandler.GetTaskByUserIdHandler())
+		taskApi.PATCH("/:id/complete", authMiddleware, taskHandler.CompleteTaskHandler(redisClient))
+		taskApi.PATCH("/:id/uncomplete", authMiddleware, taskHandler.UncompleteTaskHandler(redisClient))
+		taskApi.DELETE("/:id", authMiddleware, taskHandler.DeleteTaskHandler(redisClient))
 	}
 
 	goalApi := r.Group("/api/v1/goal")
 	{
 		goalApi.POST("/create", authMiddleware, goalHandler.AddGoalHandler(redisClient))
 		goalApi.GET("/getGoal", authMiddleware, middleware.RedisCacheMiddleWare(redisClient, 5*time.Minute), goalHandler.GetGoalsByUserIdHandler())
+		goalApi.DELETE("/:id", authMiddleware, goalHandler.DeleteGoalHandler(redisClient))
 	}
 
 	questionApi := r.Group("/api/v1/question")
 	{
 		questionApi.POST("/create/:id", authMiddleware, questionHandler.AddQuestion(redisClient))
-		questionApi.GET("/getQuestion/:id ", authMiddleware, middleware.RedisCacheMiddleWare(redisClient, 5*time.Minute), questionHandler.GetQuestionsByTodoId())
+		questionApi.GET("/getQuestion/:id", authMiddleware, middleware.RedisCacheMiddleWare(redisClient, 5*time.Minute), questionHandler.GetQuestionsByTodoId())
 	}
 
 	return r

@@ -8,22 +8,22 @@ import (
 )
 
 var (
-	ErrTokenExpired = errors.New("token expired please login")
-	ErrInvalidToken = errors.New("invalid token")
-	ErrInvalidClaims = errors.New("invalid token claims")
+	ErrTokenExpired            = errors.New("token expired please login")
+	ErrInvalidToken            = errors.New("invalid token")
+	ErrInvalidClaims           = errors.New("invalid token claims")
 	ErrUnexpectedSigningMethod = errors.New("unexpected signing method")
-	ErrMismatchedTokenType = errors.New("mismatched token type")
+	ErrMismatchedTokenType     = errors.New("mismatched token type")
 )
 
 type JWTService struct {
-	secretKey        []byte
+	secretKey       []byte
 	accessTokenTTL  time.Duration
 	refreshTokenTTL time.Duration
 }
 
 func NewJWTService(secret string) *JWTService {
 	return &JWTService{
-		secretKey:        []byte(secret),
+		secretKey:       []byte(secret),
 		accessTokenTTL:  15 * time.Minute,
 		refreshTokenTTL: 7 * 24 * time.Hour,
 	}

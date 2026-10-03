@@ -10,5 +10,8 @@ type ITaskRepo interface {
 	CreateTask(ctx context.Context, task *entities.Task) (*entities.Task, error)
 	GetTaskByUserId(ctx context.Context, userId string) (*[]entities.Task, error)
 	FindTasksWithin5Minutes(ctx context.Context) (*[]entities.Task, error)
-	GetGoalOwnerByTaskId(ctx context.Context, taskID string) (string, error)
+	GetUserIdByTaskId(ctx context.Context, taskID string) (string, error)
+	GetUserIdByGoalId(ctx context.Context, goalId string) (string, error)
+	UpdateTaskStatus(ctx context.Context, taskID string, status string) (*entities.Task, error)
+	DeleteById(ctx context.Context, taskId string) error
 }

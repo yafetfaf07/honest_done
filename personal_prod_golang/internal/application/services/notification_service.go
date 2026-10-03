@@ -73,10 +73,12 @@ func (ns *NotificationService) checkAndNotifyTasks(ctx context.Context) {
 			continue
 		}
 
-		// Get the goal owner (user) to know who to notify
-		goalID, err := ns.taskRepo.GetGoalOwnerByTaskId(ctx, task.ID)
+		// Connections are registered under a user id, so resolve task -> goal ->
+		// user. This used to return the goal id, which never matched a
+		// registered connection, so no reminder was ever delivered.
+		userId, err := ns.taskRepo.GetUserIdByTaskId(ctx, task.ID)
 		if err != nil {
-			log.Printf("Error getting goal owner for task %s: %v", task.ID, err)
+			log.Printf("Error getting owner for task %s: %v", task.ID, err)
 			continue
 		}
 
@@ -91,11 +93,11 @@ func (ns *NotificationService) checkAndNotifyTasks(ctx context.Context) {
 		}
 
 		// Send to connected user
-		err = ns.connManager.SendNotification(goalID, notification)
+		err = ns.connManager.SendNotification(userId, notification)
 		if err != nil {
-			log.Printf("Error sending notification to user %s: %v", goalID, err)
+			log.Printf("Error sending notification to user %s: %v", userId, err)
 		} else {
-			log.Printf("Notification sent to user %s for task %s", goalID, task.ID)
+			log.Printf("Notification sent to user %s for task %s", userId, task.ID)
 		}
 
 		// Mark as notified

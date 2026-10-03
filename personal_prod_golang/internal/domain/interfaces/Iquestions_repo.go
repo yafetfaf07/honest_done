@@ -7,6 +7,6 @@ import (
 )
 
 type IQuestionRepo interface {
-	Create(ctx context.Context, question *entities.Question)(*entities.Question, error)
-	GetAllQuestions(ctx context.Context, taskId string)(*[]entities.Question, error)
+	Create(ctx context.Context, question *entities.Question) (*entities.Question, error)
+	GetAllQuestions(ctx context.Context, taskId string) (*[]entities.Question, error)
 }
