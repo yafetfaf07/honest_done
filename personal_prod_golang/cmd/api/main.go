@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"os"
 
 	"github.com/yafetfaf07/personal_prod.git/internal/application/services"
 	goalusecase "github.com/yafetfaf07/personal_prod.git/internal/application/usecases/goal"
@@ -31,7 +30,7 @@ func main() {
 		log.Fatalf("An error occured during connection of database %v", err)
 
 	}
-	redisInit, err := database.InitRedis(os.Getenv("REDIS_ADDR"))
+	redisInit, err := database.InitRedis(cfg.RedisAddr)
 	if err != nil {
 		log.Fatalf("An error occured during connection to redis %v", err)
 
