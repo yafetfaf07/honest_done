@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:personal_prod/pages/credentials/login.dart';
+
 import 'package:personal_prod/theme/colors.dart';
 import 'package:personal_prod/theme/spacing.dart';
+import 'package:personal_prod/theme/surfaces.dart';
 
+/// First-run welcome. Previously pushed a `Login` widget that never existed, so
+/// the button threw; the gate now decides what comes next.
 class FirstPage extends StatelessWidget {
-  const FirstPage({super.key});
+  const FirstPage({super.key, required this.onGetStarted});
+
+  final VoidCallback onGetStarted;
 
   @override
   Widget build(BuildContext context) {
@@ -24,18 +29,20 @@ class FirstPage extends StatelessWidget {
                   Icon(Icons.book, size: 64, color: colors.accentSolid),
                   const SizedBox(height: AppSpacing.spaceMd),
                   Text(
-                    "Finch",
+                    'Finch',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 30,
                       color: colors.textPrimary,
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.spaceXs),
                   Text(
-                    "Your AI personal assistant",
+                    'Your personal assistant',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: colors.textSecondary,
-                      fontSize: 24,
+                      fontSize: 20,
                     ),
                   ),
                 ],
@@ -44,12 +51,7 @@ class FirstPage extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (ctx) => Login()),
-                    );
-                  },
+                  onPressed: onGetStarted,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       vertical: AppSpacing.spaceLg,
@@ -57,11 +59,11 @@ class FirstPage extends StatelessWidget {
                     ),
                     elevation: 8,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppRadii.mdAll,
                     ),
                   ),
                   child: const Text(
-                    'Add widget',
+                    'Get started',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,

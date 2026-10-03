@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:personal_prod/theme/colors.dart';
 
 class CustomCircularProgress extends StatelessWidget {
-  const CustomCircularProgress({super.key});
+  const CustomCircularProgress({super.key, this.value = 0.85});
+
+  final double value;
 
   @override
   Widget build(BuildContext context) {
@@ -14,17 +16,17 @@ class CustomCircularProgress extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          const SizedBox(
-            width: 150,
-            height: 150,
+          SizedBox(
+            width: 60,
+            height: 60,
             child: CircularProgressIndicator(
-              value: 0.85,
+              value: value,
               strokeWidth: 4,
               strokeCap: StrokeCap.round,
             ),
           ),
           Text(
-            '85%',
+            '${(value * 100).round()}%',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 18.0,

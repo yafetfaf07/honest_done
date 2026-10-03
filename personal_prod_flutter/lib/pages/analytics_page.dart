@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_prod/theme/colors.dart';
+import 'package:personal_prod/theme/spacing.dart';
 
 class AnalyticsPage extends StatelessWidget {
   const AnalyticsPage({super.key});
@@ -14,7 +15,7 @@ class AnalyticsPage extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.bar_chart, size: 56, color: colors.accentSolid),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.spaceMd),
           Text(
             'Analytics',
             style: TextStyle(

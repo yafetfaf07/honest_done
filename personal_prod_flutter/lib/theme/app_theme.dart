@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:personal_prod/theme/colors.dart';
+import 'package:personal_prod/theme/surfaces.dart';
 
 abstract final class AppTheme {
   const AppTheme._();
@@ -102,7 +103,7 @@ abstract final class AppTheme {
 
   static OutlineInputBorder _inputBorder(Color color, {double width = 1}) {
     return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: AppRadii.mdAll,
       borderSide: BorderSide(color: color, width: width),
     );
   }

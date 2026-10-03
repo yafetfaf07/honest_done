@@ -1,13 +1,24 @@
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:personal_prod/components/add_task_sheet.dart';
 import 'package:personal_prod/components/custom_circular_progress.dart';
+import 'package:personal_prod/components/state_views.dart';
+import 'package:personal_prod/components/task_actions.dart';
 import 'package:personal_prod/components/tasks_list.dart';
+import 'package:personal_prod/models/models.dart';
 import 'package:personal_prod/pages/analytics_page.dart';
 import 'package:personal_prod/pages/goals_page.dart';
 import 'package:personal_prod/pages/profile_page.dart';
+import 'package:personal_prod/pages/tasks_page.dart';
 import 'package:personal_prod/pages/timer_page.dart';
+import 'package:personal_prod/state/auth_provider.dart';
+import 'package:personal_prod/state/goals_provider.dart';
+import 'package:personal_prod/state/tasks_provider.dart';
 import 'package:personal_prod/theme/colors.dart';
 import 'package:personal_prod/theme/spacing.dart';
+import 'package:personal_prod/theme/surfaces.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -36,12 +47,21 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
   late final List<Widget> _pages = [
-    const _HomeDashboard(),
+    _HomeDashboard(
+      onOpenTimer: () => setState(() => _selectedIndex = 2),
+      onOpenTasks: () => _openAllTasks(),
+    ),
     const GoalsPage(),
     const TimerPage(),
     const AnalyticsPage(),
     const ProfilePage(),
   ];
+
+  Future<void> _openAllTasks() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const TasksPage()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,11 +149,17 @@ class _HomePageState extends State<HomePage> {
 }
 
 class _HomeDashboard extends StatelessWidget {
-  const _HomeDashboard();
+  const _HomeDashboard({required this.onOpenTimer, required this.onOpenTasks});
+
+  final VoidCallback onOpenTimer;
+  final VoidCallback onOpenTasks;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final tasks = context.watch<TasksProvider>();
+    final user = context.watch<AuthProvider>().user;
+    final today = _tasksForToday(tasks.upcoming);
 
     return SingleChildScrollView(
       key: const ValueKey('home-dashboard'),
@@ -146,7 +172,7 @@ class _HomeDashboard extends StatelessWidget {
           children: [
             const SizedBox(height: AppSpacing.spaceXl),
             Text(
-              'WELCOME BACK',
+              _greeting(user?.name),
               style: TextStyle(
                 fontWeight: FontWeight.w500,
                 color: colors.textSecondary,
@@ -160,14 +186,9 @@ class _HomeDashboard extends StatelessWidget {
                 vertical: AppSpacing.spaceSm,
               ),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppRadii.lgAll,
                 color: colors.bgSurface,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 10,
-                  ),
-                ],
+                boxShadow: AppShadows.cardBorder(context),
               ),
               child: Row(
                 children: [
@@ -199,15 +220,17 @@ class _HomeDashboard extends StatelessWidget {
             const SizedBox(height: AppSpacing.spaceXl),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppSpacing.spaceMd,
-                  horizontal: AppSpacing.spaceLg,
+                padding: const EdgeInsetsDirectional.only(
+                  start: AppSpacing.spaceLg - 2,
+                  end: AppSpacing.spaceLg,
+                  top: AppSpacing.spaceMd,
+                  bottom: AppSpacing.spaceMd,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppRadii.mdAll,
                 ),
               ),
-              onPressed: () {},
+              onPressed: onOpenTimer,
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -229,23 +252,120 @@ class _HomeDashboard extends StatelessWidget {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: onOpenTasks,
                   child: const Text('View All'),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.spaceSm),
-            const Column(
-              children: [
-                TasksList(),
-                TasksList(),
-                TasksList(),
-                TasksList(),
-              ],
-            ),
+            _TodayTasks(tasks: today),
           ],
         ),
       ),
     );
+  }
+
+  /// Greeting line. The dashboard used to always read "WELCOME BACK" with no
+  /// name, so there was nothing tying it to the signed-in account.
+  static String _greeting(String? name) {
+    final first = (name ?? '').trim().split(RegExp(r'\s+')).first;
+    if (first.isEmpty) return 'WELCOME BACK';
+    return 'WELCOME BACK, ${first.toUpperCase()}';
+  }
+
+  /// Only tasks scheduled for today, capped so the dashboard does not grow
+  /// without bound.
+  static List<Task> _tasksForToday(List<Task> upcoming) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
+    return upcoming.where((t) {
+      final at = t.scheduleTime.toLocal();
+      return !at.isBefore(today) && at.isBefore(tomorrow);
+    }).take(5).toList(growable: false);
+  }
+}
+
+/// The dashboard's task strip.
+///
+/// The four `TasksList()` widgets that stood here were the same hardcoded row
+/// repeated, so the count and content never changed.
+class _TodayTasks extends StatelessWidget {
+  const _TodayTasks({required this.tasks});
+
+  final List<Task> tasks;
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.read<TasksProvider>();
+
+    if (provider.isInitialLoad) return const LoadingView();
+
+    if (tasks.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.spaceLg,
+          vertical: AppSpacing.spaceXl,
+        ),
+        decoration: BoxDecoration(
+          color: context.colors.bgSurface,
+          borderRadius: AppRadii.lgAll,
+          boxShadow: AppShadows.cardBorder(context),
+        ),
+        child: Column(
+          children: [
+            Text(
+              'Nothing scheduled for today.',
+              style: TextStyle(color: context.colors.textSecondary),
+            ),
+            const SizedBox(height: AppSpacing.spaceXs),
+            TextButton(
+              onPressed: () => _addTask(context),
+              child: const Text('Add a task'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        for (final task in tasks)
+          TaskTile(
+            task: task,
+            pending: provider.isPending(task.id),
+            onToggle: (completed) => toggleTask(context, task, completed),
+            onDelete: () => deleteTask(context, task),
+          ),
+        const SizedBox(height: AppSpacing.spaceSm),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: () => _addTask(context),
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Add a task'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Task creation needs a goal, since the backend keys tasks by goal id.
+  static Future<void> _addTask(BuildContext context) async {
+    if (context.read<GoalsProvider>().goals.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Create a goal first, then add tasks to it.')),
+      );
+      return;
+    }
+
+    final created = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => const AddTaskSheet(),
+    );
+    if (created == true && context.mounted) {
+      await context.read<GoalsProvider>().refresh();
+    }
   }
 }

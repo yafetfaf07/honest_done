@@ -1,8 +1,16 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:personal_prod/state/goals_provider.dart';
 import 'package:personal_prod/theme/colors.dart';
 import 'package:personal_prod/theme/spacing.dart';
 
+/// Creates a goal.
+///
+/// The three-step wizard collected resources and a free-form plan, but
+/// `POST /api/v1/goal/create` only accepts a name, description, and target date,
+/// so the extra steps were write-only: the file and links were never sent
+/// anywhere. Collapsed to the three fields the endpoint actually stores.
 class AddGoalPage extends StatefulWidget {
   const AddGoalPage({super.key});
 
@@ -11,380 +19,185 @@ class AddGoalPage extends StatefulWidget {
 }
 
 class _AddGoalPageState extends State<AddGoalPage> {
-  final TextEditingController _goalTitleController = TextEditingController();
-  final TextEditingController _resourcesController = TextEditingController();
-  final TextEditingController _plansController = TextEditingController();
-  final TextEditingController _targetDateController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
 
-  int _stepIndex = 0;
-  String? _selectedResourceFile;
-
-  static const double _stepOneProgress = 0.40;
-  static const double _stepTwoProgress = 0.70;
-  static const double _stepThreeProgress = 1.0;
+  DateTime? _targetDate;
+  bool _submitting = false;
 
   @override
   void dispose() {
-    _goalTitleController.dispose();
-    _resourcesController.dispose();
-    _plansController.dispose();
-    _targetDateController.dispose();
+    _nameController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
   Future<void> _pickTargetDate() async {
-    final initialDate = DateTime.now();
-    final pickedDate = await showDatePicker(
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    final picked = await showDatePicker(
       context: context,
-      initialDate: initialDate,
-      firstDate: DateTime(initialDate.year, initialDate.month, initialDate.day),
-      lastDate: DateTime(initialDate.year + 5),
+      initialDate: _targetDate ?? today,
+      firstDate: today,
+      lastDate: DateTime(now.year + 5, 12, 31),
+      helpText: 'When do you want to be done?',
     );
-
-    if (pickedDate != null) {
-      _targetDateController.text =
-          '${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.year}';
-    }
+    if (picked != null) setState(() => _targetDate = picked);
   }
 
-  Future<void> _pickResourceFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf', 'docx'],
-    );
-
-    if (result != null && result.files.single.name.isNotEmpty) {
-      setState(() {
-        _selectedResourceFile = result.files.single.name;
-      });
-    }
-  }
-
-  void _goForward() {
-    if (_stepIndex < 2) {
-      setState(() {
-        _stepIndex += 1;
-      });
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_targetDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pick a target date.')),
+      );
       return;
     }
 
-    Navigator.of(context).pop();
-  }
+    FocusScope.of(context).unfocus();
+    setState(() => _submitting = true);
 
-  void _goBack() {
-    if (_stepIndex == 0) {
-      Navigator.of(context).pop();
+    final goals = context.read<GoalsProvider>();
+    final ok = await goals.create(
+      name: _nameController.text,
+      description: _descriptionController.text,
+      targetDate: _targetDate!,
+    );
+
+    if (!mounted) return;
+    setState(() => _submitting = false);
+
+    if (ok) {
+      Navigator.of(context).pop(true);
       return;
     }
 
-    setState(() {
-      _stepIndex -= 1;
-    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(goals.error ?? 'Could not create that goal.')),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
 
-    final progress = switch (_stepIndex) {
-      0 => _stepOneProgress,
-      1 => _stepTwoProgress,
-      _ => _stepThreeProgress,
-    };
-
-    final stepLabel = switch (_stepIndex) {
-      0 => 'Step 1 of 3',
-      1 => 'Step 2 of 3',
-      _ => 'Step 3 of 3',
-    };
-
-    final completionLabel = switch (_stepIndex) {
-      0 => '40% Complete',
-      1 => '70% Complete',
-      _ => '100% Complete',
-    };
-
-    final title = switch (_stepIndex) {
-      0 => 'Set your destination',
-      1 => 'Add your resources',
-      _ => 'Map your plan',
-    };
-
-    final subtitle = switch (_stepIndex) {
-      0 =>
-        'Clear goals are the first step to massive momentum. What are we forging today?',
-      1 =>
-        'Paste a YouTube or website link, then upload a PDF or DOCX resource if you have one.',
-      _ =>
-        'Write down the plan and the actions you want to complete for this goal.',
-    };
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('New Goal'),
-        centerTitle: true,
-      ),
-      body: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [colors.accentSubtle, colors.bgSurface],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.layoutMargin,
-              AppSpacing.spaceMd,
-              AppSpacing.layoutMargin,
-              AppSpacing.spaceXl,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      appBar: AppBar(title: const Text('New goal')),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.layoutMargin),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      stepLabel,
+                      'Set your destination',
                       style: TextStyle(
-                        color: colors.accentText,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        height: 1.1,
+                        color: colors.textPrimary,
                       ),
                     ),
+                    const SizedBox(height: AppSpacing.spaceSm),
                     Text(
-                      completionLabel,
-                      style: TextStyle(
-                        color: colors.textSecondary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
+                      'A goal needs a name, what you want out of it, and a date to be done by.',
+                      style: TextStyle(color: colors.textSecondary),
+                    ),
+                    const SizedBox(height: AppSpacing.spaceXl),
+                    TextFormField(
+                      controller: _nameController,
+                      textCapitalization: TextCapitalization.sentences,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Goal title',
+                        hintText: 'Become a Golang backend engineer',
+                        prefixIcon: Icon(Icons.flag_outlined),
                       ),
+                      validator: (value) {
+                        if ((value ?? '').trim().isEmpty) {
+                          return 'Give the goal a name.';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.spaceLg),
+                    TextFormField(
+                      controller: _descriptionController,
+                      maxLines: 5,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: const InputDecoration(
+                        labelText: 'What does success look like?',
+                        hintText: 'How will you achieve this?',
+                        alignLabelWithHint: true,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.spaceLg),
+                    InkWell(
+                      onTap: _submitting ? null : _pickTargetDate,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Target date',
+                          prefixIcon: const Icon(Icons.calendar_month_outlined),
+                          suffixIcon: const Icon(Icons.expand_more),
+                          errorText: _targetDate == null && _submitting
+                              ? 'Pick a target date.'
+                              : null,
+                        ),
+                        child: Text(
+                          _targetDate == null ? 'Select a date' : _formatDate(_targetDate!),
+                          style: TextStyle(
+                            color: _targetDate == null
+                                ? colors.textMuted
+                                : colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.space2xl),
+                    FilledButton(
+                      onPressed: _submitting ? null : _submit,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.spaceLg,
+                        ),
+                      ),
+                      child: _submitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text(
+                              'Create goal',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ],
-                ),
-                const SizedBox(height: AppSpacing.spaceSm),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 9,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.spaceXl),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w800,
-                    height: 1.05,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.spaceMd),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 18,
-                    height: 1.45,
-                    color: colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.spaceXl),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  child: switch (_stepIndex) {
-                    0 => _StepOne(
-                      key: const ValueKey('step-1'),
-                      goalTitleController: _goalTitleController,
-                      targetDateController: _targetDateController,
-                      onPickDate: _pickTargetDate,
-                    ),
-                    1 => _StepTwo(
-                      key: const ValueKey('step-2'),
-                      resourcesController: _resourcesController,
-                      selectedFileName: _selectedResourceFile,
-                      onPickFile: _pickResourceFile,
-                    ),
-                    _ => _StepThree(
-                      key: const ValueKey('step-3'),
-                      plansController: _plansController,
-                    ),
-                  },
-                ),
-                const SizedBox(height: AppSpacing.spaceXl),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.spaceLg),
-                      elevation: 0,
-                    ),
-                    onPressed: _goForward,
-                    child: Text(
-                      _stepIndex == 0
-                          ? 'Continue to Resources'
-                          : _stepIndex == 1
-                          ? 'Continue to Plans'
-                          : 'Save Goal',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.spaceMd),
-                TextButton(
-                  onPressed: _goBack,
-                  child: Text(
-                    _stepIndex == 0 ? 'Cancel' : 'Back',
-                    style: TextStyle(
-                      color: colors.textSecondary,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StepOne extends StatelessWidget {
-  const _StepOne({
-    super.key,
-    required this.goalTitleController,
-    required this.targetDateController,
-    required this.onPickDate,
-  });
-
-  final TextEditingController goalTitleController;
-  final TextEditingController targetDateController;
-  final VoidCallback onPickDate;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: goalTitleController,
-          decoration: const InputDecoration(
-            hintText: 'Goal Title',
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: AppSpacing.spaceLg,
-              vertical: AppSpacing.spaceLg,
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.spaceMd),
-        TextField(
-          maxLines: 5,
-          decoration: const InputDecoration(
-            hintText: 'How will you achieve this?',
-            contentPadding: EdgeInsets.all(AppSpacing.spaceLg),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.spaceMd),
-        GestureDetector(
-          onTap: onPickDate,
-          child: AbsorbPointer(
-            child: TextField(
-              controller: targetDateController,
-              decoration: const InputDecoration(
-                labelText: 'Target Date',
-                hintText: 'mm / dd / yyyy',
-                suffixIcon: Icon(Icons.calendar_month_outlined),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 18,
                 ),
               ),
             ),
           ),
         ),
-      ],
+      ),
     );
   }
-}
 
-class _StepTwo extends StatelessWidget {
-  const _StepTwo({
-    super.key,
-    required this.resourcesController,
-    required this.selectedFileName,
-    required this.onPickFile,
-  });
-
-  final TextEditingController resourcesController;
-  final String? selectedFileName;
-  final VoidCallback onPickFile;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: resourcesController,
-          decoration: const InputDecoration(
-            hintText: 'YouTube link or website link',
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: AppSpacing.spaceLg,
-              vertical: AppSpacing.spaceLg,
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.spaceMd),
-        OutlinedButton.icon(
-          onPressed: onPickFile,
-          icon: const Icon(Icons.upload_file),
-          label: Text(
-            selectedFileName == null
-                ? 'Upload PDF or DOCX'
-                : selectedFileName!,
-          ),
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size.fromHeight(56),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StepThree extends StatelessWidget {
-  const _StepThree({
-    super.key,
-    required this.plansController,
-  });
-
-  final TextEditingController plansController;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: plansController,
-          maxLines: 8,
-          decoration: const InputDecoration(
-            hintText:
-                'Tell us your plans and the things you want to achieve...',
-            contentPadding: EdgeInsets.all(AppSpacing.spaceLg),
-          ),
-        ),
-      ],
-    );
+  static String _formatDate(DateTime date) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 }
