@@ -18,12 +18,14 @@ func SetupRouter(userHandler *handlers.Userhandler, taskHandler *handlers.TaskHa
 		c.JSON(http.StatusOK, gin.H{"message": "Hello World"})
 	})
 
-	wsApi := r.Group("/api/v1")
+	authMiddleware := middleware.AuthMiddleWare(jwtService)
+
+	// Reminders are pushed over this socket, so it sits behind the same auth as
+	// the REST routes and takes the user id from the validated token.
+	wsApi := r.Group("/api/v1", authMiddleware)
 	{
 		wsApi.GET("/ws", wsHandler.Connect())
 	}
-
-	authMiddleware := middleware.AuthMiddleWare(jwtService)
 
 	userApi := r.Group("/api/v1/user")
 	{

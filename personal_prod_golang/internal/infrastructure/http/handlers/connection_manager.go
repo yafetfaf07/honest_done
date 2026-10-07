@@ -9,6 +9,27 @@ import (
 type ClientConnection struct {
 	UserID string
 	Conn   *websocket.Conn
+
+	// gorilla/websocket permits only one concurrent writer per connection.
+	// The handler's read loop echoes messages while the reminder scheduler
+	// pushes notifications, so both paths must serialise through here or the
+	// interleaved frames corrupt the stream.
+	writeMu sync.Mutex
+}
+
+// WriteJSON sends v as a single text frame, excluding any concurrent writer.
+func (c *ClientConnection) WriteJSON(v interface{}) error {
+	c.writeMu.Lock()
+	defer c.writeMu.Unlock()
+	return c.Conn.WriteJSON(v)
+}
+
+// WriteMessage sends an already-framed message, excluding any concurrent
+// writer. Used by the handler's echo path.
+func (c *ClientConnection) WriteMessage(messageType int, data []byte) error {
+	c.writeMu.Lock()
+	defer c.writeMu.Unlock()
+	return c.Conn.WriteMessage(messageType, data)
 }
 
 type ConnectionManager struct {
@@ -22,19 +43,40 @@ func NewConnectionManager() *ConnectionManager {
 	}
 }
 
-func (cm *ConnectionManager) AddConnection(userID string, conn *websocket.Conn) {
+// AddConnection registers conn as the active socket for userID.
+//
+// Connections are keyed by user, so a second device or tab silently replaces
+// the first. Multi-device support would key by a connection id and index by
+// user instead; that is deliberately left as a follow-up.
+func (cm *ConnectionManager) AddConnection(userID string, conn *websocket.Conn) *ClientConnection {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
-	cm.connections[userID] = &ClientConnection{
+	client := &ClientConnection{
 		UserID: userID,
 		Conn:   conn,
 	}
+	cm.connections[userID] = client
+	return client
 }
 
 func (cm *ConnectionManager) RemoveConnection(userID string) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 	delete(cm.connections, userID)
+}
+
+// RemoveConnectionIf drops the registration only when it still points at conn.
+//
+// Connections are keyed by user, so when a second socket replaces the first the
+// superseded one's read loop eventually exits and calls RemoveConnection. An
+// unconditional delete would evict the live connection and silently stop
+// reminders for that user.
+func (cm *ConnectionManager) RemoveConnectionIf(userID string, conn *ClientConnection) {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+	if current, ok := cm.connections[userID]; ok && current == conn {
+		delete(cm.connections, userID)
+	}
 }
 
 func (cm *ConnectionManager) GetConnection(userID string) *ClientConnection {
@@ -63,5 +105,5 @@ func (cm *ConnectionManager) SendNotification(userID string, notification interf
 		return nil // User not connected
 	}
 
-	return conn.Conn.WriteJSON(notification)
+	return conn.WriteJSON(notification)
 }

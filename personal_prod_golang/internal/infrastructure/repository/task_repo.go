@@ -136,8 +136,9 @@ func (t *taskRepository) GetTaskByUserId(ctx context.Context, userId string) (*[
 
 func (t *taskRepository) FindTasksWithin5Minutes(ctx context.Context) (*[]entities.Task, error) {
 	// Use UTC for all time comparisons
-	now := time.Now().UTC()
-	fiveMinutesLater := now.Add(5 * time.Minute)
+now := time.Now().In(time.FixedZone("UTC+3", 3*60*60))
+
+fiveMinutesLater := now.Add(5 * time.Minute)
 
 	var tasks []dbmodels.TodoTaskDB
 	err := t.db.WithContext(ctx).

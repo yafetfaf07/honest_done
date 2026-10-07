@@ -24,32 +24,42 @@ func NewWsHandler(connManager *ConnectionManager) *WsHandler {
 	}
 }
 
+// Connect upgrades an authenticated request to a WebSocket.
+//
+// The user id is taken from the access token that AuthMiddleWare validated and
+// stored on the context. It previously came from a `user_id` query parameter on
+// an unauthenticated route, which let anyone subscribe to another user's
+// reminders.
 func (h *WsHandler) Connect() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get user ID from query params or auth header
-		userID := c.Query("user_id")
-		if userID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "user_id is required"})
+		userID, ok := c.Get("user_id")
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing authenticated user"})
+			return
+		}
+		userId, ok := userID.(string)
+		if !ok || userId == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing authenticated user"})
 			return
 		}
 
 		// Upgrade HTTP connection to WebSocket
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upgrade connection"})
+			log.Printf("Failed to upgrade WebSocket for user %s: %v", userId, err)
 			return
 		}
 
 		// Register connection
-		h.connManager.AddConnection(userID, conn)
-		log.Printf("User %s connected via WebSocket", userID)
+		client := h.connManager.AddConnection(userId, conn)
+		log.Printf("User %s connected via WebSocket", userId)
 
 		// Listen for messages and cleanup on disconnect
 		go func() {
 			defer func() {
-				h.connManager.RemoveConnection(userID)
+				h.connManager.RemoveConnectionIf(userId, client)
 				conn.Close()
-				log.Printf("User %s disconnected", userID)
+				log.Printf("User %s disconnected", userId)
 			}()
 
 			for {
@@ -61,8 +71,10 @@ func (h *WsHandler) Connect() gin.HandlerFunc {
 					break
 				}
 
-				// Echo back or handle incoming messages
-				err = conn.WriteMessage(messageType, message)
+				// Echo back or handle incoming messages. Routed through the
+				// client so the echo shares the write lock with notification
+				// pushes; two concurrent writers corrupt the frame stream.
+				err = client.WriteMessage(messageType, message)
 				if err != nil {
 					break
 				}

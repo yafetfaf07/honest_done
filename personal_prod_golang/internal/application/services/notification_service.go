@@ -82,14 +82,20 @@ func (ns *NotificationService) checkAndNotifyTasks(ctx context.Context) {
 			continue
 		}
 
-		// Create notification
+		// Create notification.
+		//
+		// Both timestamps are normalised to UTC so the payload carries a single
+		// convention. ScheduleTime arrives from a timestamptz column and Timestamp
+		// was previously local, which made the two disagree by the server's UTC
+		// offset (3h here) in their RFC3339 suffixes even though both denoted the
+		// correct instant.
 		notification := TaskNotification{
 			Type:         "task_reminder",
 			TaskID:       task.ID,
 			Title:        task.Title,
 			Message:      "Task starting in 5 minutes",
-			ScheduleTime: task.ScheduleTime,
-			Timestamp:    time.Now(),
+			ScheduleTime: task.ScheduleTime.UTC(),
+			Timestamp:    time.Now().UTC(),
 		}
 
 		// Send to connected user
