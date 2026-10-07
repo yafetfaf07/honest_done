@@ -21,6 +21,7 @@ func Connect(databaseUrl string) (*gorm.DB, error) {
 	}
 	sqlDb, err := gormConnection.DB()
 
+
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get underlying sql.DB: %w", err)
 
@@ -41,7 +42,7 @@ func Connect(databaseUrl string) (*gorm.DB, error) {
 	// gormConnection.Migrator().AlterColumn(&dbmodels.TodoTaskDB{}, "Status")
 
 	sqlDb.SetMaxIdleConns(10)
-	sqlDb.SetMaxOpenConns(100)
+	sqlDb.SetMaxOpenConns(20)
 	sqlDb.SetConnMaxLifetime(time.Hour)
 
 	return gormConnection, nil
